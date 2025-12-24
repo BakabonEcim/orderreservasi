@@ -2623,6 +2623,31 @@ function registerServiceWorker() {
                 showAlert('Anda sedang offline. Data disimpan secara lokal.', 'warning');
             }
         }
+        // Clear old Service Workers
+function clearOldServiceWorkers() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations()
+      .then(registrations => {
+        for (let registration of registrations) {
+          console.log('Unregistering Service Worker:', registration.scope);
+          registration.unregister();
+        }
+      })
+      .then(() => {
+        console.log('All Service Workers unregistered');
+        // Clear cache
+        caches.keys().then(cacheNames => {
+          cacheNames.forEach(cacheName => {
+            caches.delete(cacheName);
+            console.log('Deleted cache:', cacheName);
+          });
+        });
+      });
+  }
+}
+
+// Call this if having issues
+// clearOldServiceWorkers();
     </script>
 </body>
 </html>
