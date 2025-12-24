@@ -1,8 +1,8 @@
-const CACHE_NAME = 'resto-order-v2';
+const CACHE_NAME = 'resto-order-v3';
 const urlsToCache = [
-  '/',
-  '/index.html',
-  '/manifest.json',
+  './',
+  './index.html',
+  './manifest.json',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
 ];
 
@@ -39,6 +39,20 @@ self.addEventListener('fetch', event => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
   
+  const requestUrl = new URL(event.request.url);
+  
+  // For same-origin requests
+  if (requestUrl.origin === location.origin) {
+    // For index.html
+    if (requestUrl.pathname === '/' || requestUrl.pathname === '/index.html') {
+      event.respondWith(
+        caches.match('./index.html')
+          .then(response => response || fetch(event.request))
+      );
+      return;
+    }
+  }
+  
   event.respondWith(
     caches.match(event.request)
       .then(response => {
@@ -51,7 +65,7 @@ self.addEventListener('fetch', event => {
         return fetch(event.request)
           .then(response => {
             // Check if valid response
-            if (!response || response.status !== 200 || response.type !== 'basic') {
+            if (!response || response.status !== 200) {
               return response;
             }
             
@@ -67,9 +81,9 @@ self.addEventListener('fetch', event => {
             return response;
           })
           .catch(() => {
-            // If both cache and network fail, show offline page
+            // If network fails and it's a page request, return index.html
             if (event.request.headers.get('accept').includes('text/html')) {
-              return caches.match('/index.html');
+              return caches.match('./index.html');
             }
           });
       })
