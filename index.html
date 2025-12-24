@@ -1,0 +1,2415 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Sistem Pesanan Restoran</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="Resto Order">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Resto Order">
+    <meta name="description" content="Aplikasi offline untuk mengelola menu, pesanan, dan invoice restoran">
+    <meta name="theme-color" content="#2c3e50">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json" crossorigin="use-credentials">
+    
+    <!-- Icons -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍽️</text></svg>">
+    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍽️</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍽️</text></svg>">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 10px;
+            padding-bottom: 80px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #4a6491);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .tabs {
+            display: flex;
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 15px 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-bottom: 3px solid transparent;
+            font-size: 0.9rem;
+        }
+        
+        .tab.active {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            background-color: #f8f9fa;
+        }
+        
+        .tab i {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 1.2rem;
+        }
+        
+        .tab-content {
+            display: none;
+            background-color: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+        
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-size: 1rem;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+        }
+        
+        .btn-success:hover {
+            background-color: #219653;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+        }
+        
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+        
+        .btn-warning {
+            background-color: #f39c12;
+        }
+        
+        .btn-warning:hover {
+            background-color: #d68910;
+        }
+        
+        .btn-info {
+            background-color: #17a2b8;
+        }
+        
+        .btn-info:hover {
+            background-color: #138496;
+        }
+        
+        .btn-secondary {
+            background-color: #7f8c8d;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #6c7b7d;
+        }
+        
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            width: auto;
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .menu-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .menu-details h4 {
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        
+        .menu-price {
+            font-weight: bold;
+            color: #27ae60;
+            font-size: 1.1rem;
+        }
+        
+        .menu-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .order-details {
+            flex: 1;
+        }
+        
+        .order-details h4 {
+            margin-bottom: 5px;
+            color: #2c3e50;
+        }
+        
+        .order-notes {
+            font-style: italic;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .order-quantity {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .quantity-btn {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+        
+        .quantity-btn:hover {
+            background-color: #2980b9;
+        }
+        
+        .quantity-input {
+            width: 60px;
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        
+        .order-item-actions {
+            display: flex;
+            gap: 5px;
+            margin-left: 10px;
+        }
+        
+        .reservation-item {
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .past-reservation-item {
+            border-left-color: #7f8c8d;
+            opacity: 0.8;
+        }
+        
+        .reservation-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .reservation-name {
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .reservation-date {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        
+        .reservation-total {
+            margin-bottom: 10px;
+        }
+        
+        .invoice {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            white-space: pre-line;
+            font-family: monospace;
+            overflow-x: auto;
+            max-height: 300px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+        
+        .invoice-title {
+            text-align: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+            color: #2c3e50;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #7f8c8d;
+        }
+        
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #bdc3c7;
+        }
+        
+        .total-section {
+            background-color: #e8f4fc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-align: right;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+        
+        .action-buttons {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            padding: 15px;
+            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .autocomplete-container {
+            position: relative;
+        }
+        
+        .autocomplete-list {
+            position: absolute;
+            z-index: 1000;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            width: 100%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+        
+        .autocomplete-item {
+            padding: 10px 15px;
+            cursor: pointer;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .autocomplete-item:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .autocomplete-item:last-child {
+            border-bottom: none;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow: auto;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #7f8c8d;
+        }
+        
+        .import-export-section {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .import-export-section h3 {
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        
+        .file-input-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 12px 15px;
+            background-color: #e9ecef;
+            border: 1px dashed #6c757d;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .file-input-label:hover {
+            background-color: #dee2e6;
+        }
+        
+        .file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        
+        .file-info {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        
+        .file-format-note {
+            background-color: #fff3cd;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #856404;
+        }
+        
+        .file-format-note code {
+            background-color: #f8f9fa;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        .manual-import-section {
+            background-color: #e8f4fc;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .manual-import-section textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 10px;
+            border: 1px solid #3498db;
+            border-radius: 5px;
+            font-family: monospace;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .manual-import-section .example {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            margin-bottom: 10px;
+        }
+        
+        /* Install Button Styling */
+        #installButton {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            z-index: 1000;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: pulse 2s infinite;
+            transition: all 0.3s ease;
+        }
+        
+        #installButton:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @media (max-width: 600px) {
+            .form-row {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .tab {
+                font-size: 0.8rem;
+                padding: 12px 5px;
+            }
+            
+            .tab i {
+                font-size: 1rem;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            .btn-group .btn {
+                width: 100%;
+            }
+            
+            .order-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .order-item-actions {
+                margin-left: 0;
+                width: 100%;
+                justify-content: flex-end;
+            }
+            
+            #installButton {
+                bottom: 70px;
+                right: 10px;
+                padding: 10px 15px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><i class="fas fa-utensils"></i> Sistem Pesanan Restoran</h1>
+        <p>Aplikasi offline untuk mengelola menu, pesanan, dan invoice</p>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="master">
+            <i class="fas fa-book"></i>
+            <span>Data Master</span>
+        </div>
+        <div class="tab" data-tab="order">
+            <i class="fas fa-plus-circle"></i>
+            <span>Buat Pesanan</span>
+        </div>
+        <div class="tab" data-tab="reservations">
+            <i class="fas fa-calendar"></i>
+            <span>Reservasi Aktif</span>
+        </div>
+        <div class="tab" data-tab="past-reservations">
+            <i class="fas fa-history"></i>
+            <span>Reservasi Lama</span>
+        </div>
+    </div>
+    
+    <!-- Tab Data Master -->
+    <div id="master" class="tab-content active">
+        <h2 style="margin-bottom: 20px; color: #2c3e50;">Data Menu Restoran</h2>
+        
+        <!-- Import/Export Section -->
+        <div class="import-export-section">
+            <h3>Import/Export Data Menu</h3>
+            <div class="btn-group" style="margin-bottom: 15px;">
+                <button id="downloadTemplateBtn" class="btn btn-info">
+                    <i class="fas fa-download"></i> Download Template CSV
+                </button>
+                <button id="exportMenuBtn" class="btn btn-secondary">
+                    <i class="fas fa-file-export"></i> Export Data Menu
+                </button>
+            </div>
+            
+            <!-- Input File untuk Import -->
+            <div class="file-input-container">
+                <label for="importFile" class="file-input-label">
+                    <i class="fas fa-file-import" style="margin-right: 8px;"></i>
+                    Klik untuk Import Data Menu dari CSV (ACode)
+                </label>
+                <input type="file" id="importFile" class="file-input" accept=".csv, .txt">
+            </div>
+            
+            <!-- Manual Import Section -->
+            <div class="manual-import-section">
+                <h4 style="margin-bottom: 10px; color: #2c3e50;">Import Manual (Untuk Desktop)</h4>
+                <p style="margin-bottom: 10px; font-size: 0.9rem;">Tempel data menu dalam format CSV di bawah ini:</p>
+                
+                <div class="example">
+                    <strong>Format:</strong> nama_menu,harga<br>
+                    <strong>Contoh:</strong><br>
+                    Nasi Goreng Special,25000<br>
+                    Ayam Bakar Pedas,35000<br>
+                    Es Teh Manis,8000
+                </div>
+                
+                <textarea id="manualImportText" placeholder="Tempel data CSV di sini..."></textarea>
+                
+                <button id="manualImportBtn" class="btn btn-success">
+                    <i class="fas fa-upload"></i> Import Data Manual
+                </button>
+            </div>
+            
+            <div class="file-info">
+                <p><strong>Format file CSV:</strong></p>
+                <p>File harus memiliki format: <code>nama_menu,harga</code></p>
+                <p>Contoh:</p>
+                <pre style="background-color: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 0.9rem;">
+Nasi Goreng Special,25000
+Ayam Bakar Pedas,35000
+Es Teh Manis,8000</pre>
+            </div>
+            
+            <div class="file-format-note">
+                <i class="fas fa-info-circle" style="margin-right: 5px;"></i>
+                <strong>Catatan:</strong> Data yang diimport akan ditambahkan ke menu yang sudah ada. Menu dengan nama yang sama akan diganti dengan data yang baru.
+            </div>
+        </div>
+        
+        <!-- Add Menu Form -->
+        <div style="margin-top: 30px;">
+            <h3 style="margin-bottom: 20px; color: #2c3e50;">Tambah Menu Baru</h3>
+            <div class="form-group">
+                <label for="menuName">Nama Menu:</label>
+                <input type="text" id="menuName" class="form-control" placeholder="Contoh: Nasi Goreng Special">
+            </div>
+            
+            <div class="form-group">
+                <label for="menuPrice">Harga (Rp):</label>
+                <input type="number" id="menuPrice" class="form-control" placeholder="Contoh: 25000">
+            </div>
+            
+            <button id="addMenuBtn" class="btn btn-success">
+                <i class="fas fa-plus"></i> Tambah Menu
+            </button>
+        </div>
+        
+        <!-- Menu List -->
+        <div id="menuList" style="margin-top: 30px;">
+            <h3 style="margin-bottom: 15px; color: #2c3e50;">Daftar Menu (Total: <span id="menuCount">0</span>)</h3>
+            <div id="menuItemsContainer">
+                <!-- Menu items will be loaded here -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Buat Pesanan -->
+    <div id="order" class="tab-content">
+        <h2 style="margin-bottom: 20px; color: #2c3e50;">Buat Pesanan Baru</h2>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="customerName">Nama Pemesan:</label>
+                <input type="text" id="customerName" class="form-control" placeholder="Masukkan nama pemesan">
+            </div>
+            
+            <div class="form-group">
+                <label for="reservationDate">Tanggal Reservasi:</label>
+                <input type="date" id="reservationDate" class="form-control">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="searchMenu">Cari Menu:</label>
+            <div class="autocomplete-container">
+                <input type="text" id="searchMenu" class="form-control" placeholder="Ketik nama menu...">
+                <div id="autocompleteList" class="autocomplete-list"></div>
+            </div>
+            <small style="color: #7f8c8d; display: block; margin-top: 5px;">Ketik nama menu untuk mencari dari daftar menu</small>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="itemQuantity">Jumlah:</label>
+                <div class="quantity-controls">
+                    <button type="button" class="quantity-btn" id="decreaseQuantity">-</button>
+                    <input type="number" id="itemQuantity" class="quantity-input" value="1" min="1">
+                    <button type="button" class="quantity-btn" id="increaseQuantity">+</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="itemNotes">Catatan (opsional):</label>
+                <input type="text" id="itemNotes" class="form-control" placeholder="Contoh: 1 pedas, tanpa bawang, dll.">
+            </div>
+        </div>
+        
+        <div class="form-group" style="display: flex; align-items: flex-end;">
+            <button id="addToOrderBtn" class="btn btn-secondary">
+                <i class="fas fa-cart-plus"></i> Tambah ke Pesanan
+            </button>
+        </div>
+        
+        <h3 style="margin-top: 30px; margin-bottom: 15px; color: #2c3e50;">Daftar Pesanan (<span id="orderItemsCount">0</span> item)</h3>
+        <div id="orderItemsContainer">
+            <!-- Order items will be loaded here -->
+        </div>
+        
+        <div id="orderTotalSection" class="total-section" style="display: none;">
+            Total: Rp <span id="orderTotal">0</span>
+        </div>
+        
+        <div id="invoiceSection" style="display: none;">
+            <h3 style="margin-top: 30px; margin-bottom: 15px; color: #2c3e50;">Invoice</h3>
+            <div id="invoiceOutput" class="invoice">
+                <!-- Invoice will be generated here -->
+            </div>
+            
+            <div class="btn-group" style="margin-top: 15px;">
+                <button id="copyInvoiceBtn" class="btn btn-success">
+                    <i class="fas fa-copy"></i> Salin Invoice
+                </button>
+                <button id="clearOrderBtn" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Hapus Pesanan
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tab Reservasi Aktif -->
+    <div id="reservations" class="tab-content">
+        <h2 style="margin-bottom: 20px; color: #2c3e50;">Reservasi Aktif (<span id="activeReservationCount">0</span>)</h2>
+        <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 0.9rem;">Reservasi untuk hari ini dan masa depan</p>
+        
+        <div id="activeReservationsContainer">
+            <!-- Active reservations will be loaded here -->
+        </div>
+    </div>
+    
+    <!-- Tab Reservasi Lama -->
+    <div id="past-reservations" class="tab-content">
+        <h2 style="margin-bottom: 20px; color: #2c3e50;">Reservasi Lama (<span id="pastReservationCount">0</span>)</h2>
+        <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 0.9rem;">Reservasi dengan tanggal yang sudah lewat</p>
+        
+        <div id="pastReservationsContainer">
+            <!-- Past reservations will be loaded here -->
+        </div>
+    </div>
+    
+    <!-- Action buttons for saving order -->
+    <div id="actionButtons" class="action-buttons" style="display: none;">
+        <button id="generateInvoiceBtn" class="btn btn-success">
+            <i class="fas fa-file-invoice"></i> Generate Invoice
+        </button>
+        <button id="saveOrderBtn" class="btn" style="margin-top: 10px;">
+            <i class="fas fa-save"></i> Simpan Pesanan ke List Reservasi
+        </button>
+    </div>
+    
+    <!-- Modal untuk Invoice -->
+    <div id="invoiceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Invoice Pesanan</div>
+                <button class="modal-close" id="closeInvoiceModal">&times;</button>
+            </div>
+            <div id="modalInvoiceContent" class="invoice" style="max-height: 400px;"></div>
+            <div class="btn-group" style="margin-top: 20px;">
+                <button id="copyModalInvoiceBtn" class="btn btn-success">
+                    <i class="fas fa-copy"></i> Salin Invoice
+                </button>
+                <button id="closeModalBtn" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal untuk Edit Item Pesanan -->
+    <div id="editItemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Edit Item Pesanan</div>
+                <button class="modal-close" id="closeEditItemModal">&times;</button>
+            </div>
+            <div id="editItemForm">
+                <div class="form-group">
+                    <label for="editItemMenu">Menu:</label>
+                    <input type="text" id="editItemMenu" class="form-control" readonly>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editItemQuantity">Jumlah:</label>
+                    <div class="quantity-controls" style="justify-content: center;">
+                        <button type="button" class="quantity-btn" id="editDecreaseQuantity">-</button>
+                        <input type="number" id="editItemQuantity" class="quantity-input" value="1" min="1" style="width: 80px;">
+                        <button type="button" class="quantity-btn" id="editIncreaseQuantity">+</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editItemNotes">Catatan (opsional):</label>
+                    <input type="text" id="editItemNotes" class="form-control" placeholder="Contoh: 1 pedas, tanpa bawang, dll.">
+                </div>
+                
+                <div class="form-group">
+                    <label>Harga Satuan:</label>
+                    <div id="editItemPrice" style="font-weight: bold; font-size: 1.2rem; color: #27ae60;">Rp 0</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Subtotal:</label>
+                    <div id="editItemSubtotal" style="font-weight: bold; font-size: 1.3rem; color: #2c3e50;">Rp 0</div>
+                </div>
+                
+                <input type="hidden" id="editItemIndex">
+                
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button id="updateItemBtn" class="btn btn-success">
+                        <i class="fas fa-check"></i> Update Item
+                    </button>
+                    <button id="cancelEditItemBtn" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal untuk Edit Menu -->
+    <div id="editMenuModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title">Edit Menu</div>
+                <button class="modal-close" id="closeEditMenuModal">&times;</button>
+            </div>
+            <div id="editMenuForm">
+                <div class="form-group">
+                    <label for="editMenuName">Nama Menu:</label>
+                    <input type="text" id="editMenuName" class="form-control" placeholder="Nama menu">
+                </div>
+                
+                <div class="form-group">
+                    <label for="editMenuPrice">Harga (Rp):</label>
+                    <input type="number" id="editMenuPrice" class="form-control" placeholder="Harga menu">
+                </div>
+                
+                <input type="hidden" id="editMenuId">
+                
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button id="updateMenuBtn" class="btn btn-success">
+                        <i class="fas fa-check"></i> Update Menu
+                    </button>
+                    <button id="cancelEditMenuBtn" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Alert container -->
+    <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 300px;"></div>
+
+    <script>
+        // Data storage
+        let menuItems = JSON.parse(localStorage.getItem('restaurant_menu')) || [];
+        let reservations = JSON.parse(localStorage.getItem('restaurant_reservations')) || [];
+        let currentOrder = {
+            id: null,
+            customerName: '',
+            reservationDate: '',
+            items: [],
+            total: 0
+        };
+        
+        // PWA Installation
+        let deferredPrompt;
+        let installButton;
+        
+        // DOM Elements
+        const tabElements = document.querySelectorAll('.tab');
+        const tabContentElements = document.querySelectorAll('.tab-content');
+        
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load initial data
+            loadMenuItems();
+            loadReservations();
+            updateMenuCount();
+            updateReservationCounts();
+            
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('reservationDate').value = today;
+            currentOrder.reservationDate = today;
+            
+            // Event listeners for tabs
+            tabElements.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    tabElements.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Update active content
+                    tabContentElements.forEach(content => {
+                        content.classList.remove('active');
+                        if (content.id === tabId) {
+                            content.classList.add('active');
+                        }
+                    });
+                    
+                    // Show/hide action buttons
+                    if (tabId === 'order') {
+                        document.getElementById('actionButtons').style.display = 'block';
+                        updateActionButtons();
+                    } else {
+                        document.getElementById('actionButtons').style.display = 'none';
+                    }
+                });
+            });
+            
+            // Event listener for adding menu
+            document.getElementById('addMenuBtn').addEventListener('click', addMenuItem);
+            
+            // Event listener for adding item to order
+            document.getElementById('addToOrderBtn').addEventListener('click', addItemToOrder);
+            
+            // Event listener for generating invoice
+            document.getElementById('generateInvoiceBtn').addEventListener('click', generateInvoice);
+            
+            // Event listener for copying invoice
+            document.getElementById('copyInvoiceBtn').addEventListener('click', copyInvoiceToClipboard);
+            
+            // Event listener for saving order
+            document.getElementById('saveOrderBtn').addEventListener('click', saveOrder);
+            
+            // Event listener for clearing order
+            document.getElementById('clearOrderBtn').addEventListener('click', clearOrder);
+            
+            // Event listeners for customer name and date
+            document.getElementById('customerName').addEventListener('input', function() {
+                currentOrder.customerName = this.value;
+                updateActionButtons();
+            });
+            
+            document.getElementById('reservationDate').addEventListener('change', function() {
+                currentOrder.reservationDate = this.value;
+            });
+            
+            // Event listener for search menu autocomplete
+            document.getElementById('searchMenu').addEventListener('input', function() {
+                showAutocomplete(this.value);
+            });
+            
+            // Event listeners for quantity buttons
+            document.getElementById('decreaseQuantity').addEventListener('click', function() {
+                const quantityInput = document.getElementById('itemQuantity');
+                let currentValue = parseInt(quantityInput.value) || 1;
+                if (currentValue > 1) {
+                    quantityInput.value = currentValue - 1;
+                }
+            });
+            
+            document.getElementById('increaseQuantity').addEventListener('click', function() {
+                const quantityInput = document.getElementById('itemQuantity');
+                let currentValue = parseInt(quantityInput.value) || 1;
+                quantityInput.value = currentValue + 1;
+            });
+            
+            // Event listeners for edit item modal quantity buttons
+            document.getElementById('editDecreaseQuantity').addEventListener('click', function() {
+                const quantityInput = document.getElementById('editItemQuantity');
+                let currentValue = parseInt(quantityInput.value) || 1;
+                if (currentValue > 1) {
+                    quantityInput.value = currentValue - 1;
+                    updateEditItemSubtotal();
+                }
+            });
+            
+            document.getElementById('editIncreaseQuantity').addEventListener('click', function() {
+                const quantityInput = document.getElementById('editItemQuantity');
+                let currentValue = parseInt(quantityInput.value) || 1;
+                quantityInput.value = currentValue + 1;
+                updateEditItemSubtotal();
+            });
+            
+            document.getElementById('editItemQuantity').addEventListener('input', updateEditItemSubtotal);
+            
+            // Event listener for update item button
+            document.getElementById('updateItemBtn').addEventListener('click', updateOrderItem);
+            
+            // Event listener for cancel edit item button
+            document.getElementById('cancelEditItemBtn').addEventListener('click', function() {
+                document.getElementById('editItemModal').style.display = 'none';
+            });
+            
+            // Event listener for update menu button
+            document.getElementById('updateMenuBtn').addEventListener('click', updateMenuItem);
+            
+            // Event listener for cancel edit menu button
+            document.getElementById('cancelEditMenuBtn').addEventListener('click', function() {
+                document.getElementById('editMenuModal').style.display = 'none';
+            });
+            
+            // Event listeners for import/export
+            document.getElementById('downloadTemplateBtn').addEventListener('click', downloadTemplateCSV);
+            document.getElementById('exportMenuBtn').addEventListener('click', exportMenuData);
+            document.getElementById('importFile').addEventListener('change', importMenuFromCSV);
+            document.getElementById('manualImportBtn').addEventListener('click', manualImportMenu);
+            
+            // Modal event listeners
+            document.getElementById('closeInvoiceModal').addEventListener('click', function() {
+                document.getElementById('invoiceModal').style.display = 'none';
+            });
+            
+            document.getElementById('closeModalBtn').addEventListener('click', function() {
+                document.getElementById('invoiceModal').style.display = 'none';
+            });
+            
+            document.getElementById('copyModalInvoiceBtn').addEventListener('click', copyModalInvoiceToClipboard);
+            
+            document.getElementById('closeEditItemModal').addEventListener('click', function() {
+                document.getElementById('editItemModal').style.display = 'none';
+            });
+            
+            document.getElementById('closeEditMenuModal').addEventListener('click', function() {
+                document.getElementById('editMenuModal').style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            document.getElementById('invoiceModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('editItemModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('editMenuModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+            
+            // Close autocomplete when clicking outside
+            document.addEventListener('click', function(e) {
+                const autocompleteList = document.getElementById('autocompleteList');
+                const searchMenu = document.getElementById('searchMenu');
+                
+                if (e.target !== searchMenu && e.target !== autocompleteList) {
+                    autocompleteList.style.display = 'none';
+                }
+            });
+            
+            // Load any existing order from localStorage
+            loadCurrentOrder();
+            
+            // Initialize PWA
+            initPWA();
+        });
+        
+        // Function to add a new menu item
+        function addMenuItem() {
+            const nameInput = document.getElementById('menuName');
+            const priceInput = document.getElementById('menuPrice');
+            
+            const name = nameInput.value.trim();
+            const price = parseInt(priceInput.value);
+            
+            if (!name || !price || price <= 0) {
+                showAlert('Harap isi nama menu dan harga dengan benar!', 'danger');
+                return;
+            }
+            
+            // Check if menu already exists
+            const existingMenuIndex = menuItems.findIndex(item => 
+                item.name.toLowerCase() === name.toLowerCase()
+            );
+            
+            if (existingMenuIndex !== -1) {
+                // Update existing menu
+                menuItems[existingMenuIndex].price = price;
+                showAlert('Menu dengan nama yang sama sudah ada! Harga diperbarui.', 'warning');
+            } else {
+                // Add new menu item
+                const newItem = {
+                    id: Date.now(),
+                    name: name,
+                    price: price
+                };
+                
+                menuItems.push(newItem);
+                showAlert('Menu berhasil ditambahkan!', 'success');
+            }
+            
+            saveMenuItems();
+            
+            // Clear inputs
+            nameInput.value = '';
+            priceInput.value = '';
+            
+            // Update UI
+            loadMenuItems();
+            updateMenuCount();
+            
+            // Focus on name input
+            nameInput.focus();
+        }
+        
+        // Function to load and display menu items
+        function loadMenuItems() {
+            const container = document.getElementById('menuItemsContainer');
+            
+            if (menuItems.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-book-open"></i>
+                        <h3>Belum ada menu</h3>
+                        <p>Tambahkan menu pertama Anda di form di atas atau import dari file CSV</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort menu items by name
+            const sortedMenuItems = [...menuItems].sort((a, b) => 
+                a.name.localeCompare(b.name)
+            );
+            
+            container.innerHTML = sortedMenuItems.map(item => `
+                <div class="menu-item" data-id="${item.id}">
+                    <div class="menu-details">
+                        <h4>${item.name}</h4>
+                        <div class="menu-price">Rp ${item.price.toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="menu-actions">
+                        <button class="btn btn-sm btn-warning" onclick="editMenuItem(${item.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteMenuItem(${item.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Function to update menu count
+        function updateMenuCount() {
+            document.getElementById('menuCount').textContent = menuItems.length;
+        }
+        
+        // Function to update reservation counts
+        function updateReservationCounts() {
+            const today = new Date().toISOString().split('T')[0];
+            
+            const activeReservations = reservations.filter(r => r.reservationDate >= today);
+            const pastReservations = reservations.filter(r => r.reservationDate < today);
+            
+            document.getElementById('activeReservationCount').textContent = activeReservations.length;
+            document.getElementById('pastReservationCount').textContent = pastReservations.length;
+        }
+        
+        // Function to edit a menu item
+        function editMenuItem(id) {
+            const menuItem = menuItems.find(item => item.id === id);
+            if (!menuItem) return;
+            
+            // Populate modal with menu data
+            document.getElementById('editMenuName').value = menuItem.name;
+            document.getElementById('editMenuPrice').value = menuItem.price;
+            document.getElementById('editMenuId').value = id;
+            
+            // Show modal
+            document.getElementById('editMenuModal').style.display = 'flex';
+        }
+        
+        // Function to update a menu item
+        function updateMenuItem() {
+            const id = parseInt(document.getElementById('editMenuId').value);
+            const newName = document.getElementById('editMenuName').value.trim();
+            const newPrice = parseInt(document.getElementById('editMenuPrice').value);
+            
+            if (!newName || !newPrice || newPrice <= 0) {
+                showAlert('Harap isi nama menu dan harga dengan benar!', 'danger');
+                return;
+            }
+            
+            // Find the menu item
+            const menuIndex = menuItems.findIndex(item => item.id === id);
+            
+            if (menuIndex === -1) {
+                showAlert('Menu tidak ditemukan!', 'danger');
+                return;
+            }
+            
+            // Check if another menu already has the same name (excluding current menu)
+            const duplicateIndex = menuItems.findIndex(item => 
+                item.id !== id && item.name.toLowerCase() === newName.toLowerCase()
+            );
+            
+            if (duplicateIndex !== -1) {
+                showAlert('Menu dengan nama yang sama sudah ada!', 'warning');
+                return;
+            }
+            
+            // Update menu item
+            menuItems[menuIndex].name = newName;
+            menuItems[menuIndex].price = newPrice;
+            
+            // Save to localStorage
+            saveMenuItems();
+            
+            // Update UI
+            loadMenuItems();
+            
+            // Close modal
+            document.getElementById('editMenuModal').style.display = 'none';
+            
+            showAlert('Menu berhasil diupdate!', 'success');
+        }
+        
+        // Function to delete a menu item
+        function deleteMenuItem(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus menu ini?')) {
+                return;
+            }
+            
+            menuItems = menuItems.filter(item => item.id !== id);
+            saveMenuItems();
+            loadMenuItems();
+            updateMenuCount();
+            showAlert('Menu berhasil dihapus!', 'success');
+        }
+        
+        // Function untuk manual import dari textarea
+        function manualImportMenu() {
+            const importText = document.getElementById('manualImportText').value.trim();
+            
+            if (!importText) {
+                showAlert('Harap masukkan data CSV untuk diimport!', 'warning');
+                return;
+            }
+            
+            try {
+                const lines = importText.split('\n');
+                let importedCount = 0;
+                let updatedCount = 0;
+                
+                // Process each line
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const parts = line.split(',');
+                    if (parts.length < 2) continue;
+                    
+                    const name = parts[0].trim();
+                    const price = parseInt(parts[1].trim());
+                    
+                    if (!name || isNaN(price) || price <= 0) continue;
+                    
+                    // Check if menu already exists
+                    const existingMenuIndex = menuItems.findIndex(item => 
+                        item.name.toLowerCase() === name.toLowerCase()
+                    );
+                    
+                    if (existingMenuIndex !== -1) {
+                        // Update existing menu
+                        menuItems[existingMenuIndex].price = price;
+                        updatedCount++;
+                    } else {
+                        // Add new menu item
+                        const newItem = {
+                            id: Date.now() + i,
+                            name: name,
+                            price: price
+                        };
+                        menuItems.push(newItem);
+                        importedCount++;
+                    }
+                }
+                
+                if (importedCount === 0 && updatedCount === 0) {
+                    showAlert('Tidak ada data valid yang ditemukan! Pastikan format: nama_menu,harga', 'warning');
+                    return;
+                }
+                
+                saveMenuItems();
+                loadMenuItems();
+                updateMenuCount();
+                
+                // Clear textarea
+                document.getElementById('manualImportText').value = '';
+                
+                // Show import result
+                let message = 'Import manual selesai! ';
+                if (importedCount > 0) message += `${importedCount} menu baru ditambahkan. `;
+                if (updatedCount > 0) message += `${updatedCount} menu diperbarui.`;
+                
+                showAlert(message, 'success');
+                
+            } catch (error) {
+                console.error('Error importing manually:', error);
+                showAlert('Gagal mengimport data. Pastikan format data benar.', 'danger');
+            }
+        }
+        
+        // Function to download template CSV
+        function downloadTemplateCSV() {
+            // Create CSV content
+            const csvContent = "nama_menu,harga\nNasi Goreng Special,25000\nAyam Bakar Pedas,35000\nEs Teh Manis,8000";
+            
+            // Create blob and download link
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'template_menu_restoran.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showAlert('Template berhasil didownload!', 'success');
+        }
+        
+        // Function to export menu data
+        function exportMenuData() {
+            if (menuItems.length === 0) {
+                showAlert('Tidak ada data menu untuk diexport!', 'warning');
+                return;
+            }
+            
+            // Create CSV content
+            let csvContent = "nama_menu,harga\n";
+            menuItems.forEach(item => {
+                csvContent += `${item.name},${item.price}\n`;
+            });
+            
+            // Create blob and download link
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `menu_restoran_${new Date().toISOString().slice(0, 10)}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showAlert('Data menu berhasil diexport!', 'success');
+        }
+        
+        // Function untuk import dari file CSV (untuk ACode)
+        function importMenuFromCSV(event) {
+            const file = event.target.files[0];
+            if (!file) {
+                showAlert('Tidak ada file yang dipilih!', 'warning');
+                return;
+            }
+            
+            // Cek apakah file adalah CSV
+            if (!file.name.toLowerCase().endsWith('.csv') && !file.type.includes('text/csv')) {
+                showAlert('File harus berformat CSV!', 'danger');
+                event.target.value = '';
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    
+                    // Auto-fill manual import textarea dengan isi file
+                    document.getElementById('manualImportText').value = content;
+                    
+                    // Tampilkan pesan bahwa data siap diimport
+                    showAlert('Data CSV berhasil dibaca. Klik "Import Data Manual" untuk melanjutkan.', 'info');
+                    
+                } catch (error) {
+                    console.error('Error reading CSV file:', error);
+                    showAlert('Gagal membaca file CSV. Coba gunakan import manual.', 'danger');
+                }
+            };
+            
+            reader.onerror = function() {
+                showAlert('Gagal membaca file. Pastikan file tidak rusak.', 'danger');
+                event.target.value = '';
+            };
+            
+            reader.readAsText(file, 'UTF-8');
+        }
+        
+        // Function to show autocomplete suggestions
+        function showAutocomplete(searchTerm) {
+            const autocompleteList = document.getElementById('autocompleteList');
+            
+            if (!searchTerm.trim()) {
+                autocompleteList.style.display = 'none';
+                return;
+            }
+            
+            const searchTermLower = searchTerm.toLowerCase();
+            const filteredItems = menuItems.filter(item => 
+                item.name.toLowerCase().includes(searchTermLower)
+            ).slice(0, 10); // Limit to 10 suggestions
+            
+            if (filteredItems.length === 0) {
+                autocompleteList.style.display = 'none';
+                return;
+            }
+            
+            autocompleteList.innerHTML = filteredItems.map(item => `
+                <div class="autocomplete-item" data-id="${item.id}" data-name="${item.name}" data-price="${item.price}">
+                    <div><strong>${highlightText(item.name, searchTerm)}</strong></div>
+                    <div>Rp ${item.price.toLocaleString('id-ID')}</div>
+                </div>
+            `).join('');
+            
+            autocompleteList.style.display = 'block';
+            
+            // Add click event to autocomplete items
+            const autocompleteItems = autocompleteList.querySelectorAll('.autocomplete-item');
+            autocompleteItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    const id = parseInt(this.getAttribute('data-id'));
+                    const name = this.getAttribute('data-name');
+                    
+                    document.getElementById('searchMenu').value = name;
+                    autocompleteList.style.display = 'none';
+                    
+                    // Focus on quantity input
+                    document.getElementById('itemQuantity').focus();
+                    document.getElementById('itemQuantity').select();
+                });
+            });
+        }
+        
+        // Function to highlight search term in text
+        function highlightText(text, searchTerm) {
+            if (!searchTerm.trim()) return text;
+            
+            const regex = new RegExp(`(${searchTerm})`, 'gi');
+            return text.replace(regex, '<mark>$1</mark>');
+        }
+        
+        // Function to add an item to the current order
+        function addItemToOrder() {
+            const searchInput = document.getElementById('searchMenu');
+            const quantityInput = document.getElementById('itemQuantity');
+            const notesInput = document.getElementById('itemNotes');
+            
+            const menuName = searchInput.value.trim();
+            const quantity = parseInt(quantityInput.value);
+            const notes = notesInput.value.trim();
+            
+            if (!menuName || !quantity || quantity <= 0) {
+                showAlert('Harap pilih menu dan masukkan jumlah yang valid!', 'danger');
+                return;
+            }
+            
+            // Find the menu item by name
+            const menuItem = menuItems.find(item => 
+                item.name.toLowerCase() === menuName.toLowerCase()
+            );
+            
+            if (!menuItem) {
+                showAlert('Menu tidak ditemukan! Harap pilih dari daftar saran.', 'danger');
+                return;
+            }
+            
+            // Check if item already exists in order
+            const existingItemIndex = currentOrder.items.findIndex(item => item.id === menuItem.id && item.notes === notes);
+            
+            if (existingItemIndex !== -1) {
+                // Update quantity for item with same notes
+                currentOrder.items[existingItemIndex].quantity += quantity;
+                currentOrder.items[existingItemIndex].subtotal = 
+                    currentOrder.items[existingItemIndex].quantity * currentOrder.items[existingItemIndex].price;
+            } else {
+                // Add new item
+                currentOrder.items.push({
+                    id: menuItem.id,
+                    name: menuItem.name,
+                    price: menuItem.price,
+                    quantity: quantity,
+                    notes: notes,
+                    subtotal: menuItem.price * quantity
+                });
+            }
+            
+            // Update total
+            updateOrderTotal();
+            
+            // Save order to localStorage
+            saveCurrentOrder();
+            
+            // Update UI
+            loadOrderItems();
+            
+            // Reset form
+            searchInput.value = '';
+            document.getElementById('autocompleteList').style.display = 'none';
+            quantityInput.value = 1;
+            notesInput.value = '';
+            searchInput.focus();
+            
+            showAlert('Item berhasil ditambahkan ke pesanan!', 'success');
+        }
+        
+        // Function to load and display order items
+        function loadOrderItems() {
+            const container = document.getElementById('orderItemsContainer');
+            const orderItemsCount = document.getElementById('orderItemsCount');
+            
+            if (currentOrder.items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-shopping-cart"></i>
+                        <h3>Belum ada pesanan</h3>
+                        <p>Tambahkan item ke pesanan menggunakan form di atas</p>
+                    </div>
+                `;
+                
+                document.getElementById('orderTotalSection').style.display = 'none';
+                document.getElementById('invoiceSection').style.display = 'none';
+                orderItemsCount.textContent = '0';
+                return;
+            }
+            
+            container.innerHTML = currentOrder.items.map((item, index) => `
+                <div class="order-item" data-index="${index}">
+                    <div class="order-details">
+                        <h4>${item.name}</h4>
+                        <div>Rp ${item.price.toLocaleString('id-ID')} x ${item.quantity}</div>
+                        ${item.notes ? `<div class="order-notes"><i class="fas fa-sticky-note"></i> Catatan: ${item.notes}</div>` : ''}
+                        <div style="font-weight: bold; margin-top: 5px; color: #2c3e50;">Subtotal: Rp ${item.subtotal.toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="order-quantity">
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" onclick="changeOrderItemQuantity(${index}, -1)">-</button>
+                            <input type="number" class="quantity-input" value="${item.quantity}" min="1" onchange="updateOrderItemQuantity(${index}, this.value)">
+                            <button class="quantity-btn" onclick="changeOrderItemQuantity(${index}, 1)">+</button>
+                        </div>
+                        <div class="order-item-actions">
+                            <button class="btn btn-sm btn-warning" onclick="editOrderItem(${index})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="removeOrderItem(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('orderTotalSection').style.display = 'block';
+            orderItemsCount.textContent = currentOrder.items.length;
+        }
+        
+        // Function to change order item quantity using + or - buttons
+        function changeOrderItemQuantity(index, change) {
+            const newQuantity = currentOrder.items[index].quantity + change;
+            
+            if (newQuantity < 1) {
+                showAlert('Jumlah minimal 1!', 'warning');
+                return;
+            }
+            
+            currentOrder.items[index].quantity = newQuantity;
+            currentOrder.items[index].subtotal = currentOrder.items[index].price * newQuantity;
+            
+            updateOrderTotal();
+            saveCurrentOrder();
+            loadOrderItems();
+        }
+        
+        // Function to update order item quantity from input
+        function updateOrderItemQuantity(index, newQuantity) {
+            newQuantity = parseInt(newQuantity);
+            
+            if (isNaN(newQuantity) || newQuantity < 1) {
+                showAlert('Jumlah harus minimal 1!', 'danger');
+                loadOrderItems(); // Reset to original value
+                return;
+            }
+            
+            currentOrder.items[index].quantity = newQuantity;
+            currentOrder.items[index].subtotal = currentOrder.items[index].price * newQuantity;
+            
+            updateOrderTotal();
+            saveCurrentOrder();
+            loadOrderItems();
+        }
+        
+        // Function to edit order item (open modal)
+        function editOrderItem(index) {
+            const item = currentOrder.items[index];
+            
+            // Populate modal with item data
+            document.getElementById('editItemMenu').value = item.name;
+            document.getElementById('editItemQuantity').value = item.quantity;
+            document.getElementById('editItemNotes').value = item.notes || '';
+            document.getElementById('editItemPrice').textContent = `Rp ${item.price.toLocaleString('id-ID')}`;
+            document.getElementById('editItemIndex').value = index;
+            
+            // Calculate and display subtotal
+            updateEditItemSubtotal();
+            
+            // Show modal
+            document.getElementById('editItemModal').style.display = 'flex';
+        }
+        
+        // Function to update edit item subtotal
+        function updateEditItemSubtotal() {
+            const quantityInput = document.getElementById('editItemQuantity');
+            const quantity = parseInt(quantityInput.value) || 1;
+            const index = parseInt(document.getElementById('editItemIndex').value);
+            
+            if (index >= 0 && currentOrder.items[index]) {
+                const price = currentOrder.items[index].price;
+                const subtotal = price * quantity;
+                document.getElementById('editItemSubtotal').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+            }
+        }
+        
+        // Function to update order item from modal
+        function updateOrderItem() {
+            const index = parseInt(document.getElementById('editItemIndex').value);
+            const newQuantity = parseInt(document.getElementById('editItemQuantity').value);
+            const newNotes = document.getElementById('editItemNotes').value.trim();
+            
+            if (isNaN(newQuantity) || newQuantity < 1) {
+                showAlert('Jumlah harus minimal 1!', 'danger');
+                return;
+            }
+            
+            currentOrder.items[index].quantity = newQuantity;
+            currentOrder.items[index].notes = newNotes;
+            currentOrder.items[index].subtotal = currentOrder.items[index].price * newQuantity;
+            
+            updateOrderTotal();
+            saveCurrentOrder();
+            loadOrderItems();
+            
+            // Close modal
+            document.getElementById('editItemModal').style.display = 'none';
+            
+            showAlert('Item berhasil diupdate!', 'success');
+        }
+        
+        // Function to remove an item from order
+        function removeOrderItem(index) {
+            if (!confirm('Apakah Anda yakin ingin menghapus item ini dari pesanan?')) {
+                return;
+            }
+            
+            currentOrder.items.splice(index, 1);
+            updateOrderTotal();
+            saveCurrentOrder();
+            loadOrderItems();
+            showAlert('Item berhasil dihapus dari pesanan!', 'success');
+        }
+        
+        // Function to update order total
+        function updateOrderTotal() {
+            currentOrder.total = currentOrder.items.reduce((sum, item) => sum + item.subtotal, 0);
+            document.getElementById('orderTotal').textContent = currentOrder.total.toLocaleString('id-ID');
+            updateActionButtons();
+        }
+        
+        // Function to calculate DP (down payment) - 50% of total rounded to nearest 50,000
+        function calculateDP(total) {
+            // Calculate 50% of total
+            const fiftyPercent = total * 0.5;
+            
+            // Round to nearest 50,000
+            const roundedDP = Math.round(fiftyPercent / 50000) * 50000;
+            
+            // Ensure minimum is 50,000
+            return Math.max(50000, roundedDP);
+        }
+        
+        // Function to update action buttons state
+        function updateActionButtons() {
+            const hasItems = currentOrder.items.length > 0;
+            const hasCustomerName = currentOrder.customerName.trim() !== '';
+            
+            document.getElementById('generateInvoiceBtn').disabled = !hasItems || !hasCustomerName;
+            document.getElementById('saveOrderBtn').disabled = !hasItems || !hasCustomerName;
+            
+            if (currentOrder.id) {
+                document.getElementById('saveOrderBtn').innerHTML = '<i class="fas fa-save"></i> Update Pesanan';
+            } else {
+                document.getElementById('saveOrderBtn').innerHTML = '<i class="fas fa-save"></i> Simpan Pesanan ke List Reservasi';
+            }
+        }
+        
+        // Function to generate invoice
+        function generateInvoice() {
+            // Check if customer name and date are filled
+            if (!currentOrder.customerName.trim()) {
+                showAlert('Harap isi nama pemesan terlebih dahulu!', 'danger');
+                document.getElementById('customerName').focus();
+                return;
+            }
+            
+            if (!currentOrder.reservationDate) {
+                showAlert('Harap pilih tanggal reservasi terlebih dahulu!', 'danger');
+                document.getElementById('reservationDate').focus();
+                return;
+            }
+            
+            if (currentOrder.items.length === 0) {
+                showAlert('Tidak ada item dalam pesanan!', 'danger');
+                return;
+            }
+            
+            // Format date
+            const date = new Date(currentOrder.reservationDate);
+            const formattedDate = date.toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            // Calculate DP
+            const dpAmount = calculateDP(currentOrder.total);
+            
+            // Generate invoice text sesuai format yang baru
+            let invoiceText = "Berikut rekapan pesanannya:\n\n";
+            invoiceText += `Nama : ${currentOrder.customerName}\n`;
+            invoiceText += `Tanggal Reservasi : ${formattedDate}\n\n`;
+            invoiceText += "Pesanan:\n";
+            
+            // Format setiap item: jumlah, nama menu, catatan (jika ada), subtotal
+            currentOrder.items.forEach((item) => {
+                const qty = item.quantity.toString().padStart(2);
+                let nameWithNotes = item.name;
+                if (item.notes) {
+                    nameWithNotes += ` (${item.notes})`;
+                }
+                const subtotal = "Rp" + item.subtotal.toLocaleString('id-ID');
+                
+                // Format: 2   Nasi Goreng Jakarta (1 pedas) Rp74.000
+                invoiceText += `${qty}   ${nameWithNotes} ${subtotal}\n`;
+            });
+            
+            invoiceText += `\nTOTAL: Rp${currentOrder.total.toLocaleString('id-ID')}\n`;
+            invoiceText += `DP minimal: Rp${dpAmount.toLocaleString('id-ID')}\n\n`;
+            invoiceText += "Mohon untuk memeriksa ulang pesanannya.\n";
+            invoiceText += "Terima kasih sebelumnya 🙏";
+            
+            // Display invoice
+            document.getElementById('invoiceOutput').textContent = invoiceText;
+            document.getElementById('invoiceSection').style.display = 'block';
+            
+            // Scroll to invoice
+            document.getElementById('invoiceSection').scrollIntoView({ behavior: 'smooth' });
+            
+            showAlert('Invoice berhasil dibuat!', 'success');
+        }
+        
+        // Function to copy invoice to clipboard
+        function copyInvoiceToClipboard() {
+            const invoiceText = document.getElementById('invoiceOutput').textContent;
+            copyTextToClipboard(invoiceText, 'Invoice berhasil disalin ke clipboard!');
+        }
+        
+        // Function to copy modal invoice to clipboard
+        function copyModalInvoiceToClipboard() {
+            const invoiceText = document.getElementById('modalInvoiceContent').textContent;
+            copyTextToClipboard(invoiceText, 'Invoice berhasil disalin ke clipboard!');
+        }
+        
+        // Generic function to copy text to clipboard
+        function copyTextToClipboard(text, successMessage) {
+            // Use the Clipboard API if available
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        showAlert(successMessage, 'success');
+                    })
+                    .catch(err => {
+                        console.error('Failed to copy: ', err);
+                        fallbackCopyToClipboard(text, successMessage);
+                    });
+            } else {
+                fallbackCopyToClipboard(text, successMessage);
+            }
+        }
+        
+        // Fallback method for copying to clipboard
+        function fallbackCopyToClipboard(text, successMessage) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showAlert(successMessage, 'success');
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+                showAlert('Gagal menyalin invoice ke clipboard!', 'danger');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+        
+        // Function to load and display reservations
+        function loadReservations() {
+            const today = new Date().toISOString().split('T')[0];
+            const activeContainer = document.getElementById('activeReservationsContainer');
+            const pastContainer = document.getElementById('pastReservationsContainer');
+            
+            // Filter reservations
+            const activeReservations = reservations.filter(r => r.reservationDate >= today);
+            const pastReservations = reservations.filter(r => r.reservationDate < today);
+            
+            // Sort reservations by date (newest first for active, oldest first for past)
+            const sortedActiveReservations = [...activeReservations].sort((a, b) => 
+                new Date(a.reservationDate) - new Date(b.reservationDate)
+            );
+            
+            const sortedPastReservations = [...pastReservations].sort((a, b) => 
+                new Date(b.reservationDate) - new Date(a.reservationDate)
+            );
+            
+            // Display active reservations
+            if (sortedActiveReservations.length === 0) {
+                activeContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-calendar-alt"></i>
+                        <h3>Belum ada reservasi aktif</h3>
+                        <p>Pesanan yang disimpan untuk hari ini dan masa depan akan muncul di sini</p>
+                    </div>
+                `;
+            } else {
+                activeContainer.innerHTML = sortedActiveReservations.map(reservation => `
+                    <div class="reservation-item">
+                        <div class="reservation-header">
+                            <div class="reservation-name">${reservation.customerName}</div>
+                            <div class="reservation-date">${new Date(reservation.reservationDate).toLocaleDateString('id-ID')}</div>
+                        </div>
+                        <div class="reservation-total">
+                            <strong>${reservation.items.length} item</strong> - Total: Rp ${reservation.total.toLocaleString('id-ID')}
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-secondary" onclick="viewReservationInvoice(${reservation.id})">
+                                <i class="fas fa-eye"></i> Lihat Invoice
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="editReservation(${reservation.id})">
+                                <i class="fas fa-edit"></i> Edit Pesanan
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteReservation(${reservation.id})">
+                                <i class="fas fa-trash"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Display past reservations
+            if (sortedPastReservations.length === 0) {
+                pastContainer.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-history"></i>
+                        <h3>Belum ada reservasi lama</h3>
+                        <p>Reservasi dengan tanggal yang sudah lewat akan muncul di sini</p>
+                    </div>
+                `;
+            } else {
+                pastContainer.innerHTML = sortedPastReservations.map(reservation => `
+                    <div class="reservation-item past-reservation-item">
+                        <div class="reservation-header">
+                            <div class="reservation-name">${reservation.customerName}</div>
+                            <div class="reservation-date">${new Date(reservation.reservationDate).toLocaleDateString('id-ID')}</div>
+                        </div>
+                        <div class="reservation-total">
+                            <strong>${reservation.items.length} item</strong> - Total: Rp ${reservation.total.toLocaleString('id-ID')}
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-secondary" onclick="viewReservationInvoice(${reservation.id})">
+                                <i class="fas fa-eye"></i> Lihat Invoice
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteReservation(${reservation.id})">
+                                <i class="fas fa-trash"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Update counts
+            updateReservationCounts();
+        }
+        
+        // Function to save order to reservations
+        function saveOrder() {
+            // Check if invoice has been generated
+            if (!document.getElementById('invoiceOutput').textContent) {
+                showAlert('Harap generate invoice terlebih dahulu!', 'danger');
+                return;
+            }
+            
+            // Create reservation object
+            const reservation = {
+                id: currentOrder.id || Date.now(),
+                customerName: currentOrder.customerName,
+                reservationDate: currentOrder.reservationDate,
+                orderDate: new Date().toISOString(),
+                items: [...currentOrder.items],
+                total: currentOrder.total,
+                invoice: document.getElementById('invoiceOutput').textContent
+            };
+            
+            // Check if we're updating an existing reservation
+            if (currentOrder.id) {
+                // Update existing reservation
+                const index = reservations.findIndex(r => r.id === currentOrder.id);
+                if (index !== -1) {
+                    reservations[index] = reservation;
+                    showAlert('Pesanan berhasil diupdate!', 'success');
+                }
+            } else {
+                // Add new reservation
+                reservations.unshift(reservation); // Add to beginning of array
+                showAlert('Pesanan berhasil disimpan ke list reservasi!', 'success');
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('restaurant_reservations', JSON.stringify(reservations));
+            
+            // Update UI
+            loadReservations();
+            
+            // Switch to reservations tab (show active reservations)
+            document.querySelector('[data-tab="reservations"]').click();
+            
+            // Clear current order tanpa konfirmasi
+            clearOrderWithoutConfirm();
+        }
+        
+        // Function to clear current order tanpa konfirmasi
+        function clearOrderWithoutConfirm() {
+            currentOrder = {
+                id: null,
+                customerName: '',
+                reservationDate: new Date().toISOString().split('T')[0],
+                items: [],
+                total: 0
+            };
+            
+            // Clear form fields
+            document.getElementById('customerName').value = '';
+            document.getElementById('reservationDate').value = currentOrder.reservationDate;
+            document.getElementById('searchMenu').value = '';
+            document.getElementById('itemQuantity').value = 1;
+            document.getElementById('itemNotes').value = '';
+            
+            // Update UI
+            loadOrderItems();
+            document.getElementById('invoiceSection').style.display = 'none';
+            updateActionButtons();
+            
+            // Clear from localStorage
+            localStorage.removeItem('restaurant_current_order');
+        }
+        
+        // Function to clear current order (with confirmation)
+        function clearOrder() {
+            if (currentOrder.items.length > 0 && !confirm('Apakah Anda yakin ingin menghapus pesanan ini?')) {
+                return;
+            }
+            
+            clearOrderWithoutConfirm();
+            showAlert('Pesanan berhasil dihapus!', 'success');
+        }
+        
+        // Function to view reservation invoice in modal
+        function viewReservationInvoice(id) {
+            const reservation = reservations.find(r => r.id === id);
+            if (!reservation) return;
+            
+            // Display invoice in modal
+            document.getElementById('modalInvoiceContent').textContent = reservation.invoice;
+            document.getElementById('invoiceModal').style.display = 'flex';
+            
+            // Set up copy button for this specific invoice
+            document.getElementById('copyModalInvoiceBtn').onclick = function() {
+                copyModalInvoiceToClipboard();
+            };
+        }
+        
+        // Function to edit a reservation
+        function editReservation(id) {
+            const reservation = reservations.find(r => r.id === id);
+            if (!reservation) return;
+            
+            // Set current order to reservation data
+            currentOrder = {
+                id: reservation.id,
+                customerName: reservation.customerName,
+                reservationDate: reservation.reservationDate,
+                items: [...reservation.items],
+                total: reservation.total
+            };
+            
+            // Update form fields
+            document.getElementById('customerName').value = currentOrder.customerName;
+            document.getElementById('reservationDate').value = currentOrder.reservationDate;
+            
+            // Update UI
+            loadOrderItems();
+            
+            // Generate invoice for display
+            generateInvoice();
+            
+            // Switch to order tab
+            document.querySelector('[data-tab="order"]').click();
+            
+            // Scroll to top of order form
+            document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
+            
+            showAlert('Pesanan siap diedit. Lakukan perubahan lalu klik "Update Pesanan".', 'info');
+        }
+        
+        // Function to delete a reservation
+        function deleteReservation(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus reservasi ini?')) {
+                return;
+            }
+            
+            reservations = reservations.filter(r => r.id !== id);
+            localStorage.setItem('restaurant_reservations', JSON.stringify(reservations));
+            loadReservations();
+            showAlert('Reservasi berhasil dihapus!', 'success');
+        }
+        
+        // Function to save current order to localStorage
+        function saveCurrentOrder() {
+            localStorage.setItem('restaurant_current_order', JSON.stringify(currentOrder));
+        }
+        
+        // Function to load current order from localStorage
+        function loadCurrentOrder() {
+            const savedOrder = JSON.parse(localStorage.getItem('restaurant_current_order'));
+            if (savedOrder) {
+                currentOrder = savedOrder;
+                
+                // Update form fields
+                document.getElementById('customerName').value = currentOrder.customerName || '';
+                document.getElementById('reservationDate').value = currentOrder.reservationDate || new Date().toISOString().split('T')[0];
+                
+                // Update UI
+                loadOrderItems();
+                updateActionButtons();
+            }
+        }
+        
+        // Function to save menu items to localStorage
+        function saveMenuItems() {
+            localStorage.setItem('restaurant_menu', JSON.stringify(menuItems));
+        }
+        
+        // Function to show alert
+        function showAlert(message, type) {
+            const alertContainer = document.getElementById('alertContainer');
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type}`;
+            alertDiv.innerHTML = `
+                <div style="display: flex; align-items: flex-start;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'danger' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}" style="margin-right: 10px; margin-top: 2px;"></i>
+                    <div>${message}</div>
+                </div>
+            `;
+            
+            alertContainer.appendChild(alertDiv);
+            
+            // Remove alert after 3 seconds
+            setTimeout(() => {
+                alertDiv.style.opacity = '0';
+                alertDiv.style.transition = 'opacity 0.5s';
+                setTimeout(() => {
+                    if (alertDiv.parentNode) {
+                        alertDiv.parentNode.removeChild(alertDiv);
+                    }
+                }, 500);
+            }, 3000);
+        }
+        
+        // ============ PWA Functions ============
+        
+        // Function to check PWA requirements
+        function checkPWARequirements() {
+            const requirements = {
+                https: window.location.protocol === 'https:',
+                serviceWorker: 'serviceWorker' in navigator,
+                manifest: document.querySelector('link[rel="manifest"]') !== null,
+                installPrompt: 'BeforeInstallPromptEvent' in window
+            };
+            
+            console.log('PWA Requirements Check:', requirements);
+            return requirements;
+        }
+        
+        // Function to register Service Worker
+        function registerServiceWorker() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('service-worker.js', { scope: '/' })
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                        
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            console.log('Service Worker update found!');
+                        });
+                    })
+                    .catch(function(err) {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            }
+        }
+        
+        // Function to setup PWA install prompt
+        function setupPWAInstall() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                console.log('beforeinstallprompt event fired');
+                
+                // Prevent Chrome 67 and earlier from automatically showing the prompt
+                e.preventDefault();
+                
+                // Stash the event so it can be triggered later
+                deferredPrompt = e;
+                
+                // Show install promotion
+                showInstallPromotion();
+                
+                // Optional: Log analytics event
+                console.log('PWA install prompt available');
+            });
+            
+            // Listen for app installed event
+            window.addEventListener('appinstalled', (evt) => {
+                console.log('App was installed');
+                hideInstallPromotion();
+                
+                // Optional: Log analytics event
+                console.log('PWA installed successfully');
+            });
+            
+            // Check if already installed
+            if (window.matchMedia('(display-mode: standalone)').matches) {
+                console.log('App running in standalone mode');
+                hideInstallPromotion();
+            }
+            
+            // Also check for iOS standalone mode
+            if (window.navigator.standalone === true) {
+                console.log('iOS standalone mode detected');
+                hideInstallPromotion();
+            }
+        }
+        
+        // Function to show install promotion
+        function showInstallPromotion() {
+            // Check if install button already exists
+            if (document.getElementById('installButton')) {
+                return;
+            }
+            
+            // Create install button
+            installButton = document.createElement('button');
+            installButton.id = 'installButton';
+            installButton.innerHTML = '<i class="fas fa-download"></i> Install App';
+            installButton.onclick = installPWA;
+            
+            // Add button to body
+            document.body.appendChild(installButton);
+            
+            // Show info message
+            setTimeout(() => {
+                showAlert('🎉 Instal sebagai aplikasi untuk pengalaman lebih baik!', 'info');
+            }, 3000);
+        }
+        
+        // Function to hide install promotion
+        function hideInstallPromotion() {
+            if (installButton) {
+                installButton.style.display = 'none';
+            }
+        }
+        
+        // Function to install PWA
+        function installPWA() {
+            if (!deferredPrompt) {
+                showAlert('Browser tidak mendukung instalasi aplikasi. Gunakan "Add to Home Screen" dari menu browser.', 'warning');
+                return;
+            }
+            
+            // Show the install prompt
+            deferredPrompt.prompt();
+            
+            // Wait for the user to respond to the prompt
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                    showAlert('Aplikasi berhasil diinstal! 🎉', 'success');
+                    hideInstallPromotion();
+                } else {
+                    console.log('User dismissed the install prompt');
+                    showAlert('Instalasi dibatalkan. Anda dapat menginstal nanti dari tombol Install App.', 'info');
+                }
+                
+                // Clear the deferredPrompt variable
+                deferredPrompt = null;
+            });
+        }
+        
+        // Initialize PWA
+        function initPWA() {
+            console.log('Initializing PWA...');
+            
+            // Check requirements
+            const requirements = checkPWARequirements();
+            
+            if (!requirements.https) {
+                console.warn('PWA requires HTTPS. Running on:', window.location.protocol);
+            }
+            
+            if (!requirements.serviceWorker) {
+                console.warn('Service Worker not supported');
+            }
+            
+            // Register service worker
+            registerServiceWorker();
+            
+            // Setup install prompt
+            setupPWAInstall();
+            
+            // Show PWA status
+            setTimeout(() => {
+                if (requirements.serviceWorker && requirements.manifest) {
+                    console.log('✅ PWA ready for installation');
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
