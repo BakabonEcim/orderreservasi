@@ -1,4 +1,4 @@
-const CACHE_NAME = 'resto-order-v3';
+const CACHE_NAME = 'resto-order-v4';
 const urlsToCache = [
   './',
   './index.html',
@@ -8,18 +8,23 @@ const urlsToCache = [
 
 // Install event
 self.addEventListener('install', event => {
+  console.log('Service Worker installing');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('Cache opened');
+        console.log('Cache opened, adding files to cache');
         return cache.addAll(urlsToCache);
       })
-      .then(() => self.skipWaiting())
+      .then(() => {
+        console.log('All resources cached');
+        return self.skipWaiting();
+      })
   );
 });
 
 // Activate event
 self.addEventListener('activate', event => {
+  console.log('Service Worker activating');
   event.waitUntil(
     caches.keys().then(cacheNames => {
       return Promise.all(
@@ -30,7 +35,10 @@ self.addEventListener('activate', event => {
           }
         })
       );
-    }).then(() => self.clients.claim())
+    }).then(() => {
+      console.log('Claiming clients');
+      return self.clients.claim();
+    })
   );
 });
 
@@ -39,18 +47,11 @@ self.addEventListener('fetch', event => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
   
-  const requestUrl = new URL(event.request.url);
+  console.log('Fetching:', event.request.url);
   
-  // For same-origin requests
-  if (requestUrl.origin === location.origin) {
-    // For index.html
-    if (requestUrl.pathname === '/' || requestUrl.pathname === '/index.html') {
-      event.respondWith(
-        caches.match('./index.html')
-          .then(response => response || fetch(event.request))
-      );
-      return;
-    }
+  // Handle API requests
+  if (event.request.url.includes('api.')) {
+    return;
   }
   
   event.respondWith(
@@ -58,10 +59,12 @@ self.addEventListener('fetch', event => {
       .then(response => {
         // Return cached response if found
         if (response) {
+          console.log('Serving from cache:', event.request.url);
           return response;
         }
         
         // Otherwise fetch from network
+        console.log('Fetching from network:', event.request.url);
         return fetch(event.request)
           .then(response => {
             // Check if valid response
@@ -76,15 +79,21 @@ self.addEventListener('fetch', event => {
             caches.open(CACHE_NAME)
               .then(cache => {
                 cache.put(event.request, responseToCache);
+                console.log('Cached new resource:', event.request.url);
               });
               
             return response;
           })
-          .catch(() => {
+          .catch(error => {
+            console.log('Fetch failed, returning offline page:', error);
             // If network fails and it's a page request, return index.html
             if (event.request.headers.get('accept').includes('text/html')) {
               return caches.match('./index.html');
             }
+            return new Response('Network error happened', {
+              status: 408,
+              headers: { 'Content-Type': 'text/plain' }
+            });
           });
       })
   );
