@@ -1,99 +1,94 @@
-const CACHE_NAME = 'resto-order-v4';
+// Nama cache
+const CACHE_NAME = 'resto-order-app-v1';
+
+// File yang akan di-cache
 const urlsToCache = [
-  './',
-  './index.html',
-  './manifest.json',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
+  '/',
+  '/index.html',
+  '/manifest.json'
 ];
 
-// Install event
-self.addEventListener('install', event => {
-  console.log('Service Worker installing');
+// Install Service Worker
+self.addEventListener('install', function(event) {
+  console.log('[Service Worker] Installing...');
+  
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then(cache => {
-        console.log('Cache opened, adding files to cache');
+      .then(function(cache) {
+        console.log('[Service Worker] Caching app shell');
         return cache.addAll(urlsToCache);
       })
-      .then(() => {
-        console.log('All resources cached');
+      .then(function() {
+        console.log('[Service Worker] Skip waiting');
         return self.skipWaiting();
       })
   );
 });
 
-// Activate event
-self.addEventListener('activate', event => {
-  console.log('Service Worker activating');
+// Activate Service Worker
+self.addEventListener('activate', function(event) {
+  console.log('[Service Worker] Activating...');
+  
   event.waitUntil(
-    caches.keys().then(cacheNames => {
+    caches.keys().then(function(cacheNames) {
       return Promise.all(
-        cacheNames.map(cacheName => {
+        cacheNames.map(function(cacheName) {
           if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
+            console.log('[Service Worker] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
-    }).then(() => {
-      console.log('Claiming clients');
+    }).then(function() {
+      console.log('[Service Worker] Claiming clients');
       return self.clients.claim();
     })
   );
 });
 
-// Fetch event
-self.addEventListener('fetch', event => {
+// Fetch resources
+self.addEventListener('fetch', function(event) {
+  console.log('[Service Worker] Fetching:', event.request.url);
+  
   // Skip non-GET requests
   if (event.request.method !== 'GET') return;
   
-  console.log('Fetching:', event.request.url);
-  
-  // Handle API requests
-  if (event.request.url.includes('api.')) {
-    return;
-  }
-  
   event.respondWith(
     caches.match(event.request)
-      .then(response => {
-        // Return cached response if found
+      .then(function(response) {
+        // Cache hit - return response
         if (response) {
-          console.log('Serving from cache:', event.request.url);
+          console.log('[Service Worker] Serving from cache:', event.request.url);
           return response;
         }
         
-        // Otherwise fetch from network
-        console.log('Fetching from network:', event.request.url);
-        return fetch(event.request)
-          .then(response => {
-            // Check if valid response
-            if (!response || response.status !== 200) {
+        // Clone the request
+        const fetchRequest = event.request.clone();
+        
+        return fetch(fetchRequest)
+          .then(function(response) {
+            // Check if we received a valid response
+            if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
             
             // Clone the response
             const responseToCache = response.clone();
             
-            // Cache the new response
             caches.open(CACHE_NAME)
-              .then(cache => {
+              .then(function(cache) {
                 cache.put(event.request, responseToCache);
-                console.log('Cached new resource:', event.request.url);
               });
               
             return response;
           })
-          .catch(error => {
-            console.log('Fetch failed, returning offline page:', error);
-            // If network fails and it's a page request, return index.html
+          .catch(function(error) {
+            console.log('[Service Worker] Fetch failed:', error);
+            
+            // Fallback untuk halaman HTML
             if (event.request.headers.get('accept').includes('text/html')) {
-              return caches.match('./index.html');
+              return caches.match('/index.html');
             }
-            return new Response('Network error happened', {
-              status: 408,
-              headers: { 'Content-Type': 'text/plain' }
-            });
           });
       })
   );
