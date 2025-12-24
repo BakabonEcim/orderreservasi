@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Sistem Pesanan Restoran</title>
     
+    <!-- Redirect untuk PWA yang terinstal -->
+    <script>
+        // Fix for installed PWA opening wrong URL
+        if (window.location.pathname !== '/' && 
+            window.location.pathname !== '/index.html' &&
+            window.location.pathname !== '/restaurant-order-app/' &&
+            !window.location.pathname.endsWith('.html')) {
+            
+            // Check if this is likely an installed PWA
+            if (window.matchMedia('(display-mode: standalone)').matches || 
+                window.navigator.standalone === true) {
+                
+                console.log('PWA opened with wrong path:', window.location.pathname);
+                // Redirect to main page
+                window.location.replace('./');
+            }
+        }
+    </script>
+    
     <!-- PWA Meta Tags -->
     <meta name="application-name" content="Resto Order">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -14,8 +33,8 @@
     <meta name="theme-color" content="#2c3e50">
     <meta name="mobile-web-app-capable" content="yes">
     
-    <!-- Manifest -->
-    <link rel="manifest" href="manifest.json" crossorigin="use-credentials">
+    <!-- Manifest dengan path relatif -->
+    <link rel="manifest" href="./manifest.json" crossorigin="use-credentials">
     
     <!-- Icons -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍽️</text></svg>">
@@ -643,6 +662,12 @@
             100% { transform: scale(1); }
         }
         
+        /* PWA Standalone Mode */
+        body.standalone-mode {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+        
         @media (max-width: 600px) {
             .form-row {
                 flex-direction: column;
@@ -687,6 +712,10 @@
                 right: 10px;
                 padding: 10px 15px;
                 font-size: 0.9rem;
+            }
+            
+            body.standalone-mode {
+                padding-top: 20px;
             }
         }
     </style>
@@ -1034,6 +1063,11 @@ Es Teh Manis,8000</pre>
         
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM Content Loaded - Initializing app');
+            
+            // Fix untuk GitHub Pages 404 issue
+            fixPWA404Issue();
+            
             // Load initial data
             loadMenuItems();
             loadReservations();
@@ -1214,7 +1248,35 @@ Es Teh Manis,8000</pre>
             
             // Initialize PWA
             initPWA();
+            
+            console.log('App initialized successfully');
         });
+        
+        // Fix untuk PWA 404 issue
+        function fixPWA404Issue() {
+            // Jika kita sudah di halaman utama, tidak perlu redirect
+            const currentPath = window.location.pathname;
+            const isRoot = currentPath === '/' || 
+                          currentPath === '/index.html' || 
+                          currentPath.endsWith('/') ||
+                          currentPath.includes('github.io');
+            
+            if (!isRoot) {
+                console.log('Non-root path detected:', currentPath);
+                
+                // Cek apakah ini PWA yang terinstal
+                const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+                const isIOSStandalone = window.navigator.standalone === true;
+                
+                if (isStandalone || isIOSStandalone) {
+                    console.log('PWA launched from wrong path, redirecting to root');
+                    // Redirect ke root setelah sedikit delay
+                    setTimeout(() => {
+                        window.location.href = './';
+                    }, 100);
+                }
+            }
+        }
         
         // Function to add a new menu item
         function addMenuItem() {
@@ -2262,7 +2324,8 @@ Es Teh Manis,8000</pre>
                 https: window.location.protocol === 'https:',
                 serviceWorker: 'serviceWorker' in navigator,
                 manifest: document.querySelector('link[rel="manifest"]') !== null,
-                installPrompt: 'BeforeInstallPromptEvent' in window
+                installPrompt: 'BeforeInstallPromptEvent' in window,
+                displayMode: window.matchMedia('(display-mode: standalone)').matches
             };
             
             console.log('PWA Requirements Check:', requirements);
@@ -2272,17 +2335,41 @@ Es Teh Manis,8000</pre>
         // Function to register Service Worker
         function registerServiceWorker() {
             if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('service-worker.js', { scope: '/' })
+                // Gunakan path relatif untuk GitHub Pages
+                const swPath = './service-worker.js';
+                console.log('Registering Service Worker from:', swPath);
+                
+                navigator.serviceWorker.register(swPath, { scope: './' })
                     .then(function(registration) {
                         console.log('ServiceWorker registration successful with scope: ', registration.scope);
                         
                         // Check for updates
                         registration.addEventListener('updatefound', () => {
                             console.log('Service Worker update found!');
+                            const newWorker = registration.installing;
+                            
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    console.log('New content is available; please refresh.');
+                                    showAlert('Versi baru tersedia! Silakan refresh halaman.', 'info');
+                                }
+                            });
+                        });
+                        
+                        // Handle offline/online status
+                        window.addEventListener('online', () => {
+                            console.log('App is online');
+                            showAlert('Koneksi internet tersedia', 'success');
+                        });
+                        
+                        window.addEventListener('offline', () => {
+                            console.log('App is offline');
+                            showAlert('Anda sedang offline. Data disimpan secara lokal.', 'warning');
                         });
                     })
                     .catch(function(err) {
                         console.log('ServiceWorker registration failed: ', err);
+                        showAlert('Service Worker gagal didaftarkan. Beberapa fitur mungkin tidak tersedia.', 'warning');
                     });
             }
         }
@@ -2301,7 +2388,6 @@ Es Teh Manis,8000</pre>
                 // Show install promotion
                 showInstallPromotion();
                 
-                // Optional: Log analytics event
                 console.log('PWA install prompt available');
             });
             
@@ -2309,21 +2395,30 @@ Es Teh Manis,8000</pre>
             window.addEventListener('appinstalled', (evt) => {
                 console.log('App was installed');
                 hideInstallPromotion();
+                showAlert('Aplikasi berhasil diinstal! 🎉', 'success');
                 
-                // Optional: Log analytics event
-                console.log('PWA installed successfully');
+                // Log installation
+                console.log('PWA installed successfully at:', new Date().toISOString());
             });
             
             // Check if already installed
             if (window.matchMedia('(display-mode: standalone)').matches) {
                 console.log('App running in standalone mode');
                 hideInstallPromotion();
+                
+                // Add standalone mode indicator
+                document.body.classList.add('standalone-mode');
+                
+                // Log standalone mode
+                console.log('App launched in standalone mode');
             }
             
             // Also check for iOS standalone mode
             if (window.navigator.standalone === true) {
                 console.log('iOS standalone mode detected');
                 hideInstallPromotion();
+                document.body.classList.add('standalone-mode');
+                console.log('iOS app launched in standalone mode');
             }
         }
         
@@ -2331,6 +2426,19 @@ Es Teh Manis,8000</pre>
         function showInstallPromotion() {
             // Check if install button already exists
             if (document.getElementById('installButton')) {
+                return;
+            }
+            
+            // Don't show install button if already in standalone mode
+            if (window.matchMedia('(display-mode: standalone)').matches || 
+                window.navigator.standalone === true) {
+                console.log('Not showing install button - already in standalone mode');
+                return;
+            }
+            
+            // Check if we can prompt for installation
+            if (!deferredPrompt) {
+                console.log('No install prompt available yet');
                 return;
             }
             
@@ -2343,6 +2451,8 @@ Es Teh Manis,8000</pre>
             // Add button to body
             document.body.appendChild(installButton);
             
+            console.log('Install button shown');
+            
             // Show info message
             setTimeout(() => {
                 showAlert('🎉 Instal sebagai aplikasi untuk pengalaman lebih baik!', 'info');
@@ -2353,6 +2463,7 @@ Es Teh Manis,8000</pre>
         function hideInstallPromotion() {
             if (installButton) {
                 installButton.style.display = 'none';
+                console.log('Install button hidden');
             }
         }
         
@@ -2363,6 +2474,8 @@ Es Teh Manis,8000</pre>
                 return;
             }
             
+            console.log('Showing install prompt');
+            
             // Show the install prompt
             deferredPrompt.prompt();
             
@@ -2372,6 +2485,15 @@ Es Teh Manis,8000</pre>
                     console.log('User accepted the install prompt');
                     showAlert('Aplikasi berhasil diinstal! 🎉', 'success');
                     hideInstallPromotion();
+                    
+                    // Log successful installation
+                    console.log('User installed the PWA');
+                    
+                    // Reload to ensure proper standalone mode (optional)
+                    setTimeout(() => {
+                        console.log('Reloading for standalone mode');
+                        window.location.reload();
+                    }, 1000);
                 } else {
                     console.log('User dismissed the install prompt');
                     showAlert('Instalasi dibatalkan. Anda dapat menginstal nanti dari tombol Install App.', 'info');
@@ -2389,12 +2511,18 @@ Es Teh Manis,8000</pre>
             // Check requirements
             const requirements = checkPWARequirements();
             
+            // Log current URL for debugging
+            console.log('Current URL:', window.location.href);
+            console.log('Current path:', window.location.pathname);
+            
             if (!requirements.https) {
                 console.warn('PWA requires HTTPS. Running on:', window.location.protocol);
+                showAlert('PWA membutuhkan HTTPS. Beberapa fitur mungkin tidak berfungsi.', 'warning');
             }
             
             if (!requirements.serviceWorker) {
                 console.warn('Service Worker not supported');
+                showAlert('Browser tidak mendukung Service Worker. Beberapa fitur offline tidak tersedia.', 'warning');
             }
             
             // Register service worker
@@ -2407,8 +2535,30 @@ Es Teh Manis,8000</pre>
             setTimeout(() => {
                 if (requirements.serviceWorker && requirements.manifest) {
                     console.log('✅ PWA ready for installation');
+                    
+                    // Check if we're running from installed app
+                    if (requirements.displayMode) {
+                        console.log('✅ App running in standalone PWA mode');
+                        showAlert('Aplikasi berjalan dalam mode standalone 🎉', 'success');
+                    }
                 }
             }, 1000);
+            
+            // Handle deep links
+            if (window.location.hash) {
+                console.log('Hash detected:', window.location.hash);
+                // You can handle deep linking here if needed
+            }
+        }
+        
+        // Handle offline/online status
+        function setupNetworkStatus() {
+            if (navigator.onLine) {
+                console.log('Initial status: Online');
+            } else {
+                console.log('Initial status: Offline');
+                showAlert('Anda sedang offline. Data disimpan secara lokal.', 'warning');
+            }
         }
     </script>
 </body>
