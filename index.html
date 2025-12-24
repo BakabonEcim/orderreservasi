@@ -43,6 +43,51 @@
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+    // Fix Service Worker Registration
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            // Coba beberapa path untuk Service Worker
+            const swPaths = [
+                './service-worker.js',
+                '/service-worker.js',
+                'service-worker.js'
+            ];
+            
+            let registrationAttempted = false;
+            
+            swPaths.forEach(function(swPath) {
+                if (!registrationAttempted) {
+                    navigator.serviceWorker.register(swPath)
+                        .then(function(registration) {
+                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                            registrationAttempted = true;
+                            
+                            // Check for updates
+                            registration.onupdatefound = function() {
+                                const installingWorker = registration.installing;
+                                installingWorker.onstatechange = function() {
+                                    if (installingWorker.state === 'installed') {
+                                        if (navigator.serviceWorker.controller) {
+                                            console.log('New content is available; please refresh.');
+                                        } else {
+                                            console.log('Content is cached for offline use.');
+                                        }
+                                    }
+                                };
+                            };
+                        })
+                        .catch(function(err) {
+                            console.log('ServiceWorker registration failed for', swPath, ': ', err);
+                        });
+                }
+            });
+        });
+    } else {
+        console.log('Service Worker is not supported');
+    }
+    </script>
     
     <style>
         * {
@@ -2333,46 +2378,64 @@ Es Teh Manis,8000</pre>
         }
         
         // Function to register Service Worker
-        function registerServiceWorker() {
-            if ('serviceWorker' in navigator) {
-                // Gunakan path relatif untuk GitHub Pages
-                const swPath = './service-worker.js';
-                console.log('Registering Service Worker from:', swPath);
-                
-                navigator.serviceWorker.register(swPath, { scope: './' })
-                    .then(function(registration) {
-                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                        
-                        // Check for updates
-                        registration.addEventListener('updatefound', () => {
-                            console.log('Service Worker update found!');
-                            const newWorker = registration.installing;
+        // Function to register Service Worker
+function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        console.log('Service Worker supported');
+        
+        // Tunggu hingga halaman selesai loading
+        window.addEventListener('load', function() {
+            console.log('Page loaded, registering Service Worker...');
+            
+            // Coba beberapa path untuk kompatibilitas
+            const swPaths = [
+                './service-worker.js',
+                'service-worker.js',
+                '/service-worker.js'
+            ];
+            
+            let registered = false;
+            
+            swPaths.forEach(swPath => {
+                if (!registered) {
+                    navigator.serviceWorker.register(swPath, { scope: './' })
+                        .then(function(registration) {
+                            console.log('✅ Service Worker registered successfully:', swPath);
+                            console.log('Scope:', registration.scope);
+                            registered = true;
                             
-                            newWorker.addEventListener('statechange', () => {
-                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                    console.log('New content is available; please refresh.');
-                                    showAlert('Versi baru tersedia! Silakan refresh halaman.', 'info');
-                                }
+                            // Update found
+                            registration.addEventListener('updatefound', () => {
+                                const newWorker = registration.installing;
+                                console.log('Service Worker update found:', newWorker.state);
+                                
+                                newWorker.addEventListener('statechange', () => {
+                                    console.log('Service Worker state changed to:', newWorker.state);
+                                    
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        console.log('New content available, refresh needed');
+                                        showAlert('Versi baru tersedia! Silakan refresh halaman.', 'info');
+                                    }
+                                });
                             });
+                        })
+                        .catch(function(error) {
+                            console.log('❌ Service Worker registration failed for', swPath, ':', error);
+                            
+                            // Coba path terakhir
+                            if (swPath === swPaths[swPaths.length - 1] && !registered) {
+                                console.log('All Service Worker paths failed');
+                                showAlert('Service Worker gagal didaftarkan. Beberapa fitur offline mungkin tidak tersedia.', 'warning');
+                            }
                         });
-                        
-                        // Handle offline/online status
-                        window.addEventListener('online', () => {
-                            console.log('App is online');
-                            showAlert('Koneksi internet tersedia', 'success');
-                        });
-                        
-                        window.addEventListener('offline', () => {
-                            console.log('App is offline');
-                            showAlert('Anda sedang offline. Data disimpan secara lokal.', 'warning');
-                        });
-                    })
-                    .catch(function(err) {
-                        console.log('ServiceWorker registration failed: ', err);
-                        showAlert('Service Worker gagal didaftarkan. Beberapa fitur mungkin tidak tersedia.', 'warning');
-                    });
-            }
-        }
+                }
+            });
+        });
+    } else {
+        console.log('Service Worker not supported');
+        showAlert('Browser tidak mendukung Service Worker. Beberapa fitur offline tidak tersedia.', 'warning');
+    }
+}
         
         // Function to setup PWA install prompt
         function setupPWAInstall() {
