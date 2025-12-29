@@ -204,6 +204,12 @@
             width: auto;
         }
         
+        .btn-xs {
+            padding: 5px 8px;
+            font-size: 0.75rem;
+            width: auto;
+        }
+        
         .btn-group {
             display: flex;
             gap: 10px;
@@ -326,6 +332,10 @@
             opacity: 0.8;
         }
         
+        .takeaway-item {
+            border-left-color: #27ae60;
+        }
+        
         .reservation-header {
             display: flex;
             justify-content: space-between;
@@ -340,6 +350,12 @@
         .reservation-date {
             color: #7f8c8d;
             font-size: 0.9rem;
+        }
+        
+        .reservation-time {
+            color: #3498db;
+            font-size: 0.85rem;
+            margin-left: 10px;
         }
         
         .reservation-total {
@@ -648,6 +664,26 @@
             padding-bottom: env(safe-area-inset-bottom);
         }
         
+        /* Button kecil di samping jumlah */
+        .add-to-order-container {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+        }
+        
+        .add-to-order-container .form-group {
+            margin-bottom: 0;
+            flex: 1;
+        }
+        
+        .small-add-btn {
+            padding: 8px 12px;
+            height: 40px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            width: auto;
+        }
+        
         @media (max-width: 600px) {
             .form-row {
                 flex-direction: column;
@@ -659,12 +695,12 @@
             }
             
             .tab {
-                font-size: 0.8rem;
-                padding: 12px 5px;
+                font-size: 0.7rem;
+                padding: 10px 3px;
             }
             
             .tab i {
-                font-size: 1rem;
+                font-size: 0.9rem;
             }
             
             .btn-group {
@@ -697,6 +733,14 @@
             body.pwa-mode {
                 padding-top: 20px;
             }
+            
+            .add-to-order-container {
+                flex-direction: column;
+            }
+            
+            .small-add-btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -715,6 +759,10 @@
             <i class="fas fa-plus-circle"></i>
             <span>Buat Pesanan</span>
         </div>
+        <div class="tab" data-tab="takeaway">
+            <i class="fas fa-shopping-bag"></i>
+            <span>Takeaway</span>
+        </div>
         <div class="tab" data-tab="reservations">
             <i class="fas fa-calendar"></i>
             <span>Reservasi Aktif</span>
@@ -722,6 +770,10 @@
         <div class="tab" data-tab="past-reservations">
             <i class="fas fa-history"></i>
             <span>Reservasi Lama</span>
+        </div>
+        <div class="tab" data-tab="list-takeaway">
+            <i class="fas fa-list"></i>
+            <span>List Takeaway</span>
         </div>
     </div>
     
@@ -830,34 +882,34 @@ Es Teh Manis,8000</pre>
         </div>
         
         <div class="form-group">
-            <label for="searchMenu">Cari Menu:</label>
+            <label for="searchMenuOrder">Cari Menu:</label>
             <div class="autocomplete-container">
-                <input type="text" id="searchMenu" class="form-control" placeholder="Ketik nama menu...">
-                <div id="autocompleteList" class="autocomplete-list"></div>
+                <input type="text" id="searchMenuOrder" class="form-control" placeholder="Ketik nama menu...">
+                <div id="autocompleteListOrder" class="autocomplete-list"></div>
             </div>
             <small style="color: #7f8c8d; display: block; margin-top: 5px;">Ketik nama menu untuk mencari dari daftar menu</small>
         </div>
         
-        <div class="form-row">
+        <div class="add-to-order-container">
             <div class="form-group">
-                <label for="itemQuantity">Jumlah:</label>
+                <label for="itemQuantityOrder">Jumlah:</label>
                 <div class="quantity-controls">
-                    <button type="button" class="quantity-btn" id="decreaseQuantity">-</button>
-                    <input type="number" id="itemQuantity" class="quantity-input" value="1" min="1">
-                    <button type="button" class="quantity-btn" id="increaseQuantity">+</button>
+                    <button type="button" class="quantity-btn" id="decreaseQuantityOrder">-</button>
+                    <input type="number" id="itemQuantityOrder" class="quantity-input" value="1" min="1">
+                    <button type="button" class="quantity-btn" id="increaseQuantityOrder">+</button>
                 </div>
             </div>
             
             <div class="form-group">
-                <label for="itemNotes">Catatan (opsional):</label>
-                <input type="text" id="itemNotes" class="form-control" placeholder="Contoh: 1 pedas, tanpa bawang, dll.">
+                <label for="itemNotesOrder">Catatan (opsional):</label>
+                <input type="text" id="itemNotesOrder" class="form-control" placeholder="Contoh: 1 pedas, tanpa bawang, dll.">
             </div>
-        </div>
-        
-        <div class="form-group" style="display: flex; align-items: flex-end;">
-            <button id="addToOrderBtn" class="btn btn-secondary">
-                <i class="fas fa-cart-plus"></i> Tambah ke Pesanan
-            </button>
+            
+            <div class="form-group" style="display: flex; align-items: flex-end;">
+                <button id="addToOrderBtn" class="btn btn-secondary small-add-btn">
+                    <i class="fas fa-cart-plus"></i> Tambah
+                </button>
+            </div>
         </div>
         
         <h3 style="margin-top: 30px; margin-bottom: 15px; color: #2c3e50;">Daftar Pesanan (<span id="orderItemsCount">0</span> item)</h3>
@@ -886,6 +938,56 @@ Es Teh Manis,8000</pre>
         </div>
     </div>
     
+    <!-- Tab Takeaway -->
+    <div id="takeaway" class="tab-content">
+        <h2 style="margin-bottom: 20px; color: #2c3e50;">Pesanan Takeaway</h2>
+        
+        <div class="form-group">
+            <label for="customerNameTakeaway">Nama Pemesan (opsional):</label>
+            <input type="text" id="customerNameTakeaway" class="form-control" placeholder="Masukkan nama pemesan (bisa dikosongkan)">
+        </div>
+        
+        <div class="form-group">
+            <label for="searchMenuTakeaway">Cari Menu:</label>
+            <div class="autocomplete-container">
+                <input type="text" id="searchMenuTakeaway" class="form-control" placeholder="Ketik nama menu...">
+                <div id="autocompleteListTakeaway" class="autocomplete-list"></div>
+            </div>
+            <small style="color: #7f8c8d; display: block; margin-top: 5px;">Ketik nama menu untuk mencari dari daftar menu</small>
+        </div>
+        
+        <div class="add-to-order-container">
+            <div class="form-group">
+                <label for="itemQuantityTakeaway">Jumlah:</label>
+                <div class="quantity-controls">
+                    <button type="button" class="quantity-btn" id="decreaseQuantityTakeaway">-</button>
+                    <input type="number" id="itemQuantityTakeaway" class="quantity-input" value="1" min="1">
+                    <button type="button" class="quantity-btn" id="increaseQuantityTakeaway">+</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="itemNotesTakeaway">Catatan (opsional):</label>
+                <input type="text" id="itemNotesTakeaway" class="form-control" placeholder="Contoh: 1 pedas, tanpa bawang, dll.">
+            </div>
+            
+            <div class="form-group" style="display: flex; align-items: flex-end;">
+                <button id="addToTakeawayBtn" class="btn btn-secondary small-add-btn">
+                    <i class="fas fa-cart-plus"></i> Tambah
+                </button>
+            </div>
+        </div>
+        
+        <h3 style="margin-top: 30px; margin-bottom: 15px; color: #2c3e50;">Daftar Pesanan Takeaway (<span id="takeawayItemsCount">0</span> item)</h3>
+        <div id="takeawayItemsContainer">
+            <!-- Takeaway items will be loaded here -->
+        </div>
+        
+        <div id="takeawayTotalSection" class="total-section" style="display: none;">
+            Total: Rp <span id="takeawayTotal">0</span>
+        </div>
+    </div>
+    
     <!-- Tab Reservasi Aktif -->
     <div id="reservations" class="tab-content">
         <h2 style="margin-bottom: 20px; color: #2c3e50;">Reservasi Aktif (<span id="activeReservationCount">0</span>)</h2>
@@ -906,13 +1008,27 @@ Es Teh Manis,8000</pre>
         </div>
     </div>
     
-    <!-- Action buttons for saving order -->
+    <!-- Tab List Takeaway -->
+    <div id="list-takeaway" class="tab-content">
+        <h2 style="margin-bottom: 20px; color: #2c3e50;">List Pesanan Takeaway (<span id="takeawayListCount">0</span>)</h2>
+        <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 0.9rem;">Pesanan takeaway berdasarkan waktu pesanan disimpan</p>
+        
+        <div id="takeawayListContainer">
+            <!-- Takeaway list will be loaded here -->
+        </div>
+    </div>
+    
+    <!-- Action buttons untuk order biasa -->
     <div id="actionButtons" class="action-buttons" style="display: none;">
-        <button id="generateInvoiceBtn" class="btn btn-success">
-            <i class="fas fa-file-invoice"></i> Generate Invoice
-        </button>
-        <button id="saveOrderBtn" class="btn" style="margin-top: 10px;">
+        <button id="saveOrderBtn" class="btn btn-success">
             <i class="fas fa-save"></i> Simpan Pesanan ke List Reservasi
+        </button>
+    </div>
+    
+    <!-- Action buttons untuk takeaway -->
+    <div id="actionButtonsTakeaway" class="action-buttons" style="display: none;">
+        <button id="saveTakeawayBtn" class="btn btn-success">
+            <i class="fas fa-save"></i> Simpan Pesanan ke List Takeaway
         </button>
     </div>
     
@@ -1027,11 +1143,8 @@ Es Teh Manis,8000</pre>
         
         window.addEventListener('beforeinstallprompt', (e) => {
             console.log('PWA install prompt available');
-            // Prevent Chrome 67 and earlier from automatically showing the prompt
             e.preventDefault();
-            // Stash the event so it can be triggered later
             deferredPrompt = e;
-            // Show install button
             showInstallButton();
         });
         
@@ -1042,26 +1155,21 @@ Es Teh Manis,8000</pre>
         });
         
         function showInstallButton() {
-            // Don't show if already installed
             if (window.matchMedia('(display-mode: standalone)').matches || 
                 window.navigator.standalone === true) {
                 return;
             }
             
-            // Remove existing button
             const existingBtn = document.getElementById('installButton');
             if (existingBtn) return;
             
-            // Create install button
             const installBtn = document.createElement('button');
             installBtn.id = 'installButton';
             installBtn.innerHTML = '<i class="fas fa-download"></i> Install App';
             installBtn.onclick = installPWA;
             
-            // Add to body
             document.body.appendChild(installBtn);
             
-            // Show info after delay
             setTimeout(() => {
                 showAlert('Instal aplikasi untuk pengalaman lebih baik! Klik tombol "Install App" di kanan bawah.', 'info');
             }, 2000);
@@ -1080,10 +1188,8 @@ Es Teh Manis,8000</pre>
                 return;
             }
             
-            // Show the install prompt
             deferredPrompt.prompt();
             
-            // Wait for the user to respond to the prompt
             deferredPrompt.userChoice.then((choiceResult) => {
                 if (choiceResult.outcome === 'accepted') {
                     console.log('User accepted the install prompt');
@@ -1109,10 +1215,19 @@ Es Teh Manis,8000</pre>
         // Data storage
         let menuItems = JSON.parse(localStorage.getItem('restaurant_menu')) || [];
         let reservations = JSON.parse(localStorage.getItem('restaurant_reservations')) || [];
+        let takeawayOrders = JSON.parse(localStorage.getItem('restaurant_takeaway')) || [];
+        
         let currentOrder = {
             id: null,
             customerName: '',
             reservationDate: '',
+            items: [],
+            total: 0
+        };
+        
+        let currentTakeaway = {
+            id: null,
+            customerName: '',
             items: [],
             total: 0
         };
@@ -1128,13 +1243,14 @@ Es Teh Manis,8000</pre>
             // Load initial data
             loadMenuItems();
             loadReservations();
+            loadTakeawayList();
             updateMenuCount();
             updateReservationCounts();
+            updateTakeawayListCount();
             
-            // Set default date to today
-            const today = new Date().toISOString().split('T')[0];
-            document.getElementById('reservationDate').value = today;
-            currentOrder.reservationDate = today;
+            // Kosongkan tanggal reservasi
+            document.getElementById('reservationDate').value = '';
+            currentOrder.reservationDate = '';
             
             // Event listeners for tabs
             tabElements.forEach(tab => {
@@ -1156,9 +1272,15 @@ Es Teh Manis,8000</pre>
                     // Show/hide action buttons
                     if (tabId === 'order') {
                         document.getElementById('actionButtons').style.display = 'block';
-                        updateActionButtons();
+                        document.getElementById('actionButtonsTakeaway').style.display = 'none';
+                        updateOrderActionButtons();
+                    } else if (tabId === 'takeaway') {
+                        document.getElementById('actionButtons').style.display = 'none';
+                        document.getElementById('actionButtonsTakeaway').style.display = 'block';
+                        updateTakeawayActionButtons();
                     } else {
                         document.getElementById('actionButtons').style.display = 'none';
+                        document.getElementById('actionButtonsTakeaway').style.display = 'none';
                     }
                 });
             });
@@ -1166,47 +1288,68 @@ Es Teh Manis,8000</pre>
             // Event listener for adding menu
             document.getElementById('addMenuBtn').addEventListener('click', addMenuItem);
             
-            // Event listener for adding item to order
+            // Event listeners for order tab
             document.getElementById('addToOrderBtn').addEventListener('click', addItemToOrder);
-            
-            // Event listener for generating invoice
-            document.getElementById('generateInvoiceBtn').addEventListener('click', generateInvoice);
-            
-            // Event listener for copying invoice
-            document.getElementById('copyInvoiceBtn').addEventListener('click', copyInvoiceToClipboard);
-            
-            // Event listener for saving order
             document.getElementById('saveOrderBtn').addEventListener('click', saveOrder);
-            
-            // Event listener for clearing order
+            document.getElementById('copyInvoiceBtn').addEventListener('click', copyInvoiceToClipboard);
             document.getElementById('clearOrderBtn').addEventListener('click', clearOrder);
+            
+            // Event listeners for takeaway tab
+            document.getElementById('addToTakeawayBtn').addEventListener('click', addItemToTakeaway);
+            document.getElementById('saveTakeawayBtn').addEventListener('click', saveTakeaway);
             
             // Event listeners for customer name and date
             document.getElementById('customerName').addEventListener('input', function() {
                 currentOrder.customerName = this.value;
-                updateActionButtons();
+                updateOrderActionButtons();
             });
             
             document.getElementById('reservationDate').addEventListener('change', function() {
                 currentOrder.reservationDate = this.value;
+                updateOrderActionButtons();
             });
             
-            // Event listener for search menu autocomplete
-            document.getElementById('searchMenu').addEventListener('input', function() {
-                showAutocomplete(this.value);
+            document.getElementById('customerNameTakeaway').addEventListener('input', function() {
+                currentTakeaway.customerName = this.value;
+                updateTakeawayActionButtons();
             });
             
-            // Event listeners for quantity buttons
-            document.getElementById('decreaseQuantity').addEventListener('click', function() {
-                const quantityInput = document.getElementById('itemQuantity');
+            // Event listener for search menu autocomplete (order)
+            document.getElementById('searchMenuOrder').addEventListener('input', function() {
+                showAutocomplete(this.value, 'order');
+            });
+            
+            // Event listener for search menu autocomplete (takeaway)
+            document.getElementById('searchMenuTakeaway').addEventListener('input', function() {
+                showAutocomplete(this.value, 'takeaway');
+            });
+            
+            // Event listeners for quantity buttons (order)
+            document.getElementById('decreaseQuantityOrder').addEventListener('click', function() {
+                const quantityInput = document.getElementById('itemQuantityOrder');
                 let currentValue = parseInt(quantityInput.value) || 1;
                 if (currentValue > 1) {
                     quantityInput.value = currentValue - 1;
                 }
             });
             
-            document.getElementById('increaseQuantity').addEventListener('click', function() {
-                const quantityInput = document.getElementById('itemQuantity');
+            document.getElementById('increaseQuantityOrder').addEventListener('click', function() {
+                const quantityInput = document.getElementById('itemQuantityOrder');
+                let currentValue = parseInt(quantityInput.value) || 1;
+                quantityInput.value = currentValue + 1;
+            });
+            
+            // Event listeners for quantity buttons (takeaway)
+            document.getElementById('decreaseQuantityTakeaway').addEventListener('click', function() {
+                const quantityInput = document.getElementById('itemQuantityTakeaway');
+                let currentValue = parseInt(quantityInput.value) || 1;
+                if (currentValue > 1) {
+                    quantityInput.value = currentValue - 1;
+                }
+            });
+            
+            document.getElementById('increaseQuantityTakeaway').addEventListener('click', function() {
+                const quantityInput = document.getElementById('itemQuantityTakeaway');
                 let currentValue = parseInt(quantityInput.value) || 1;
                 quantityInput.value = currentValue + 1;
             });
@@ -1292,16 +1435,23 @@ Es Teh Manis,8000</pre>
             
             // Close autocomplete when clicking outside
             document.addEventListener('click', function(e) {
-                const autocompleteList = document.getElementById('autocompleteList');
-                const searchMenu = document.getElementById('searchMenu');
+                const autocompleteListOrder = document.getElementById('autocompleteListOrder');
+                const autocompleteListTakeaway = document.getElementById('autocompleteListTakeaway');
+                const searchMenuOrder = document.getElementById('searchMenuOrder');
+                const searchMenuTakeaway = document.getElementById('searchMenuTakeaway');
                 
-                if (e.target !== searchMenu && e.target !== autocompleteList) {
-                    autocompleteList.style.display = 'none';
+                if (e.target !== searchMenuOrder && e.target !== autocompleteListOrder) {
+                    autocompleteListOrder.style.display = 'none';
+                }
+                
+                if (e.target !== searchMenuTakeaway && e.target !== autocompleteListTakeaway) {
+                    autocompleteListTakeaway.style.display = 'none';
                 }
             });
             
             // Load any existing order from localStorage
             loadCurrentOrder();
+            loadCurrentTakeaway();
             
             // Show welcome message
             setTimeout(() => {
@@ -1409,6 +1559,11 @@ Es Teh Manis,8000</pre>
             
             document.getElementById('activeReservationCount').textContent = activeReservations.length;
             document.getElementById('pastReservationCount').textContent = pastReservations.length;
+        }
+        
+        // Function to update takeaway list count
+        function updateTakeawayListCount() {
+            document.getElementById('takeawayListCount').textContent = takeawayOrders.length;
         }
         
         // Function to edit a menu item
@@ -1643,8 +1798,8 @@ Es Teh Manis,8000</pre>
         }
         
         // Function to show autocomplete suggestions
-        function showAutocomplete(searchTerm) {
-            const autocompleteList = document.getElementById('autocompleteList');
+        function showAutocomplete(searchTerm, type) {
+            const autocompleteList = document.getElementById(`autocompleteList${type.charAt(0).toUpperCase() + type.slice(1)}`);
             
             if (!searchTerm.trim()) {
                 autocompleteList.style.display = 'none';
@@ -1677,12 +1832,12 @@ Es Teh Manis,8000</pre>
                     const id = parseInt(this.getAttribute('data-id'));
                     const name = this.getAttribute('data-name');
                     
-                    document.getElementById('searchMenu').value = name;
+                    document.getElementById(`searchMenu${type.charAt(0).toUpperCase() + type.slice(1)}`).value = name;
                     autocompleteList.style.display = 'none';
                     
                     // Focus on quantity input
-                    document.getElementById('itemQuantity').focus();
-                    document.getElementById('itemQuantity').select();
+                    document.getElementById(`itemQuantity${type.charAt(0).toUpperCase() + type.slice(1)}`).focus();
+                    document.getElementById(`itemQuantity${type.charAt(0).toUpperCase() + type.slice(1)}`).select();
                 });
             });
         }
@@ -1695,11 +1850,13 @@ Es Teh Manis,8000</pre>
             return text.replace(regex, '<mark>$1</mark>');
         }
         
+        // ============ ORDER FUNCTIONS ============
+        
         // Function to add an item to the current order
         function addItemToOrder() {
-            const searchInput = document.getElementById('searchMenu');
-            const quantityInput = document.getElementById('itemQuantity');
-            const notesInput = document.getElementById('itemNotes');
+            const searchInput = document.getElementById('searchMenuOrder');
+            const quantityInput = document.getElementById('itemQuantityOrder');
+            const notesInput = document.getElementById('itemNotesOrder');
             
             const menuName = searchInput.value.trim();
             const quantity = parseInt(quantityInput.value);
@@ -1751,7 +1908,7 @@ Es Teh Manis,8000</pre>
             
             // Reset form
             searchInput.value = '';
-            document.getElementById('autocompleteList').style.display = 'none';
+            document.getElementById('autocompleteListOrder').style.display = 'none';
             quantityInput.value = 1;
             notesInput.value = '';
             searchInput.focus();
@@ -1917,7 +2074,7 @@ Es Teh Manis,8000</pre>
         function updateOrderTotal() {
             currentOrder.total = currentOrder.items.reduce((sum, item) => sum + item.subtotal, 0);
             document.getElementById('orderTotal').textContent = currentOrder.total.toLocaleString('id-ID');
-            updateActionButtons();
+            updateOrderActionButtons();
         }
         
         // Function to calculate DP (down payment) - 50% of total rounded to nearest 50,000
@@ -1932,13 +2089,13 @@ Es Teh Manis,8000</pre>
             return Math.max(50000, roundedDP);
         }
         
-        // Function to update action buttons state
-        function updateActionButtons() {
+        // Function to update order action buttons state
+        function updateOrderActionButtons() {
             const hasItems = currentOrder.items.length > 0;
             const hasCustomerName = currentOrder.customerName.trim() !== '';
+            const hasReservationDate = currentOrder.reservationDate.trim() !== '';
             
-            document.getElementById('generateInvoiceBtn').disabled = !hasItems || !hasCustomerName;
-            document.getElementById('saveOrderBtn').disabled = !hasItems || !hasCustomerName;
+            document.getElementById('saveOrderBtn').disabled = !hasItems || !hasCustomerName || !hasReservationDate;
             
             if (currentOrder.id) {
                 document.getElementById('saveOrderBtn').innerHTML = '<i class="fas fa-save"></i> Update Pesanan';
@@ -1947,7 +2104,7 @@ Es Teh Manis,8000</pre>
             }
         }
         
-        // Function to generate invoice
+        // Function to generate invoice automatically
         function generateInvoice() {
             // Check if customer name and date are filled
             if (!currentOrder.customerName.trim()) {
@@ -2002,14 +2159,7 @@ Es Teh Manis,8000</pre>
             invoiceText += "Mohon untuk memeriksa ulang pesanannya.\n";
             invoiceText += "Terima kasih sebelumnya 🙏";
             
-            // Display invoice
-            document.getElementById('invoiceOutput').textContent = invoiceText;
-            document.getElementById('invoiceSection').style.display = 'block';
-            
-            // Scroll to invoice
-            document.getElementById('invoiceSection').scrollIntoView({ behavior: 'smooth' });
-            
-            showAlert('Invoice berhasil dibuat!', 'success');
+            return invoiceText;
         }
         
         // Function to copy invoice to clipboard
@@ -2153,11 +2303,30 @@ Es Teh Manis,8000</pre>
         
         // Function to save order to reservations
         function saveOrder() {
-            // Check if invoice has been generated
-            if (!document.getElementById('invoiceOutput').textContent) {
-                showAlert('Harap generate invoice terlebih dahulu!', 'danger');
+            // Check if data is complete
+            if (!currentOrder.customerName.trim()) {
+                showAlert('Harap isi nama pemesan terlebih dahulu!', 'danger');
+                document.getElementById('customerName').focus();
                 return;
             }
+            
+            if (!currentOrder.reservationDate) {
+                showAlert('Harap pilih tanggal reservasi terlebih dahulu!', 'danger');
+                document.getElementById('reservationDate').focus();
+                return;
+            }
+            
+            if (currentOrder.items.length === 0) {
+                showAlert('Tidak ada item dalam pesanan!', 'danger');
+                return;
+            }
+            
+            // Generate invoice
+            const invoiceText = generateInvoice();
+            
+            // Display invoice in the UI
+            document.getElementById('invoiceOutput').textContent = invoiceText;
+            document.getElementById('invoiceSection').style.display = 'block';
             
             // Create reservation object
             const reservation = {
@@ -2167,7 +2336,7 @@ Es Teh Manis,8000</pre>
                 orderDate: new Date().toISOString(),
                 items: [...currentOrder.items],
                 total: currentOrder.total,
-                invoice: document.getElementById('invoiceOutput').textContent
+                invoice: invoiceText
             };
             
             // Check if we're updating an existing reservation
@@ -2202,22 +2371,22 @@ Es Teh Manis,8000</pre>
             currentOrder = {
                 id: null,
                 customerName: '',
-                reservationDate: new Date().toISOString().split('T')[0],
+                reservationDate: '',
                 items: [],
                 total: 0
             };
             
             // Clear form fields
             document.getElementById('customerName').value = '';
-            document.getElementById('reservationDate').value = currentOrder.reservationDate;
-            document.getElementById('searchMenu').value = '';
-            document.getElementById('itemQuantity').value = 1;
-            document.getElementById('itemNotes').value = '';
+            document.getElementById('reservationDate').value = '';
+            document.getElementById('searchMenuOrder').value = '';
+            document.getElementById('itemQuantityOrder').value = 1;
+            document.getElementById('itemNotesOrder').value = '';
             
             // Update UI
             loadOrderItems();
             document.getElementById('invoiceSection').style.display = 'none';
-            updateActionButtons();
+            updateOrderActionButtons();
             
             // Clear from localStorage
             localStorage.removeItem('restaurant_current_order');
@@ -2269,8 +2438,10 @@ Es Teh Manis,8000</pre>
             // Update UI
             loadOrderItems();
             
-            // Generate invoice for display
-            generateInvoice();
+            // Generate and display invoice
+            const invoiceText = generateInvoice();
+            document.getElementById('invoiceOutput').textContent = invoiceText;
+            document.getElementById('invoiceSection').style.display = 'block';
             
             // Switch to order tab
             document.querySelector('[data-tab="order"]').click();
@@ -2293,6 +2464,466 @@ Es Teh Manis,8000</pre>
             showAlert('Reservasi berhasil dihapus!', 'success');
         }
         
+        // ============ TAKEAWAY FUNCTIONS ============
+        
+        // Function to add an item to takeaway
+        function addItemToTakeaway() {
+            const searchInput = document.getElementById('searchMenuTakeaway');
+            const quantityInput = document.getElementById('itemQuantityTakeaway');
+            const notesInput = document.getElementById('itemNotesTakeaway');
+            
+            const menuName = searchInput.value.trim();
+            const quantity = parseInt(quantityInput.value);
+            const notes = notesInput.value.trim();
+            
+            if (!menuName || !quantity || quantity <= 0) {
+                showAlert('Harap pilih menu dan masukkan jumlah yang valid!', 'danger');
+                return;
+            }
+            
+            // Find the menu item by name
+            const menuItem = menuItems.find(item => 
+                item.name.toLowerCase() === menuName.toLowerCase()
+            );
+            
+            if (!menuItem) {
+                showAlert('Menu tidak ditemukan! Harap pilih dari daftar saran.', 'danger');
+                return;
+            }
+            
+            // Check if item already exists in takeaway
+            const existingItemIndex = currentTakeaway.items.findIndex(item => item.id === menuItem.id && item.notes === notes);
+            
+            if (existingItemIndex !== -1) {
+                // Update quantity for item with same notes
+                currentTakeaway.items[existingItemIndex].quantity += quantity;
+                currentTakeaway.items[existingItemIndex].subtotal = 
+                    currentTakeaway.items[existingItemIndex].quantity * currentTakeaway.items[existingItemIndex].price;
+            } else {
+                // Add new item
+                currentTakeaway.items.push({
+                    id: menuItem.id,
+                    name: menuItem.name,
+                    price: menuItem.price,
+                    quantity: quantity,
+                    notes: notes,
+                    subtotal: menuItem.price * quantity
+                });
+            }
+            
+            // Update total
+            updateTakeawayTotal();
+            
+            // Save takeaway to localStorage
+            saveCurrentTakeaway();
+            
+            // Update UI
+            loadTakeawayItems();
+            
+            // Reset form
+            searchInput.value = '';
+            document.getElementById('autocompleteListTakeaway').style.display = 'none';
+            quantityInput.value = 1;
+            notesInput.value = '';
+            searchInput.focus();
+            
+            showAlert('Item berhasil ditambahkan ke pesanan takeaway!', 'success');
+        }
+        
+        // Function to load and display takeaway items
+        function loadTakeawayItems() {
+            const container = document.getElementById('takeawayItemsContainer');
+            const takeawayItemsCount = document.getElementById('takeawayItemsCount');
+            
+            if (currentTakeaway.items.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-shopping-bag"></i>
+                        <h3>Belum ada pesanan takeaway</h3>
+                        <p>Tambahkan item ke pesanan takeaway menggunakan form di atas</p>
+                    </div>
+                `;
+                
+                document.getElementById('takeawayTotalSection').style.display = 'none';
+                takeawayItemsCount.textContent = '0';
+                return;
+            }
+            
+            container.innerHTML = currentTakeaway.items.map((item, index) => `
+                <div class="order-item" data-index="${index}">
+                    <div class="order-details">
+                        <h4>${item.name}</h4>
+                        <div>Rp ${item.price.toLocaleString('id-ID')} x ${item.quantity}</div>
+                        ${item.notes ? `<div class="order-notes"><i class="fas fa-sticky-note"></i> Catatan: ${item.notes}</div>` : ''}
+                        <div style="font-weight: bold; margin-top: 5px; color: #2c3e50;">Subtotal: Rp ${item.subtotal.toLocaleString('id-ID')}</div>
+                    </div>
+                    <div class="order-quantity">
+                        <div class="quantity-controls">
+                            <button class="quantity-btn" onclick="changeTakeawayItemQuantity(${index}, -1)">-</button>
+                            <input type="number" class="quantity-input" value="${item.quantity}" min="1" onchange="updateTakeawayItemQuantity(${index}, this.value)">
+                            <button class="quantity-btn" onclick="changeTakeawayItemQuantity(${index}, 1)">+</button>
+                        </div>
+                        <div class="order-item-actions">
+                            <button class="btn btn-sm btn-warning" onclick="editTakeawayItem(${index})">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="removeTakeawayItem(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('takeawayTotalSection').style.display = 'block';
+            takeawayItemsCount.textContent = currentTakeaway.items.length;
+        }
+        
+        // Function to change takeaway item quantity
+        function changeTakeawayItemQuantity(index, change) {
+            const newQuantity = currentTakeaway.items[index].quantity + change;
+            
+            if (newQuantity < 1) {
+                showAlert('Jumlah minimal 1!', 'warning');
+                return;
+            }
+            
+            currentTakeaway.items[index].quantity = newQuantity;
+            currentTakeaway.items[index].subtotal = currentTakeaway.items[index].price * newQuantity;
+            
+            updateTakeawayTotal();
+            saveCurrentTakeaway();
+            loadTakeawayItems();
+        }
+        
+        // Function to update takeaway item quantity from input
+        function updateTakeawayItemQuantity(index, newQuantity) {
+            newQuantity = parseInt(newQuantity);
+            
+            if (isNaN(newQuantity) || newQuantity < 1) {
+                showAlert('Jumlah harus minimal 1!', 'danger');
+                loadTakeawayItems(); // Reset to original value
+                return;
+            }
+            
+            currentTakeaway.items[index].quantity = newQuantity;
+            currentTakeaway.items[index].subtotal = currentTakeaway.items[index].price * newQuantity;
+            
+            updateTakeawayTotal();
+            saveCurrentTakeaway();
+            loadTakeawayItems();
+        }
+        
+        // Function to edit takeaway item
+        function editTakeawayItem(index) {
+            const item = currentTakeaway.items[index];
+            
+            // Populate modal with item data
+            document.getElementById('editItemMenu').value = item.name;
+            document.getElementById('editItemQuantity').value = item.quantity;
+            document.getElementById('editItemNotes').value = item.notes || '';
+            document.getElementById('editItemPrice').textContent = `Rp ${item.price.toLocaleString('id-ID')}`;
+            document.getElementById('editItemIndex').value = index;
+            
+            // Calculate and display subtotal
+            updateEditItemSubtotal();
+            
+            // Show modal
+            document.getElementById('editItemModal').style.display = 'flex';
+        }
+        
+        // Function to update takeaway item from modal
+        function updateTakeawayItem() {
+            const index = parseInt(document.getElementById('editItemIndex').value);
+            const newQuantity = parseInt(document.getElementById('editItemQuantity').value);
+            const newNotes = document.getElementById('editItemNotes').value.trim();
+            
+            if (isNaN(newQuantity) || newQuantity < 1) {
+                showAlert('Jumlah harus minimal 1!', 'danger');
+                return;
+            }
+            
+            // Check if we're editing order or takeaway
+            const itemType = document.getElementById('editItemModal').getAttribute('data-type') || 'order';
+            
+            if (itemType === 'takeaway') {
+                currentTakeaway.items[index].quantity = newQuantity;
+                currentTakeaway.items[index].notes = newNotes;
+                currentTakeaway.items[index].subtotal = currentTakeaway.items[index].price * newQuantity;
+                
+                updateTakeawayTotal();
+                saveCurrentTakeaway();
+                loadTakeawayItems();
+            }
+            
+            // Close modal
+            document.getElementById('editItemModal').style.display = 'none';
+            
+            showAlert('Item berhasil diupdate!', 'success');
+        }
+        
+        // Function to remove an item from takeaway
+        function removeTakeawayItem(index) {
+            if (!confirm('Apakah Anda yakin ingin menghapus item ini dari pesanan takeaway?')) {
+                return;
+            }
+            
+            currentTakeaway.items.splice(index, 1);
+            updateTakeawayTotal();
+            saveCurrentTakeaway();
+            loadTakeawayItems();
+            showAlert('Item berhasil dihapus dari pesanan takeaway!', 'success');
+        }
+        
+        // Function to update takeaway total
+        function updateTakeawayTotal() {
+            currentTakeaway.total = currentTakeaway.items.reduce((sum, item) => sum + item.subtotal, 0);
+            document.getElementById('takeawayTotal').textContent = currentTakeaway.total.toLocaleString('id-ID');
+            updateTakeawayActionButtons();
+        }
+        
+        // Function to update takeaway action buttons state
+        function updateTakeawayActionButtons() {
+            const hasItems = currentTakeaway.items.length > 0;
+            
+            document.getElementById('saveTakeawayBtn').disabled = !hasItems;
+        }
+        
+        // Function to generate takeaway invoice
+        function generateTakeawayInvoice() {
+            if (currentTakeaway.items.length === 0) {
+                showAlert('Tidak ada item dalam pesanan takeaway!', 'danger');
+                return;
+            }
+            
+            const now = new Date();
+            const formattedDate = now.toLocaleDateString('id-ID', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            const formattedTime = now.toLocaleTimeString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            
+            // Generate invoice text
+            let invoiceText = "Berikut rekapan pesanan takeaway:\n\n";
+            
+            if (currentTakeaway.customerName.trim()) {
+                invoiceText += `Nama : ${currentTakeaway.customerName}\n`;
+            }
+            
+            invoiceText += `Tanggal : ${formattedDate}\n`;
+            invoiceText += `Waktu : ${formattedTime}\n\n`;
+            invoiceText += "Pesanan:\n";
+            
+            // Format setiap item
+            currentTakeaway.items.forEach((item) => {
+                const qty = item.quantity.toString().padStart(2);
+                let nameWithNotes = item.name;
+                if (item.notes) {
+                    nameWithNotes += ` (${item.notes})`;
+                }
+                const subtotal = "Rp" + item.subtotal.toLocaleString('id-ID');
+                
+                invoiceText += `${qty}   ${nameWithNotes} ${subtotal}\n`;
+            });
+            
+            invoiceText += `\nTOTAL: Rp${currentTakeaway.total.toLocaleString('id-ID')}\n\n`;
+            invoiceText += "Terima kasih atas pesanannya! 🙏";
+            
+            return invoiceText;
+        }
+        
+        // Function to save takeaway order
+        function saveTakeaway() {
+            if (currentTakeaway.items.length === 0) {
+                showAlert('Tidak ada item dalam pesanan takeaway!', 'danger');
+                return;
+            }
+            
+            // Generate invoice
+            const invoiceText = generateTakeawayInvoice();
+            
+            // Create takeaway object
+            const takeaway = {
+                id: currentTakeaway.id || Date.now(),
+                customerName: currentTakeaway.customerName || 'Tidak ada nama',
+                orderDate: new Date().toISOString(),
+                items: [...currentTakeaway.items],
+                total: currentTakeaway.total,
+                invoice: invoiceText
+            };
+            
+            // Check if we're updating an existing takeaway
+            if (currentTakeaway.id) {
+                // Update existing takeaway
+                const index = takeawayOrders.findIndex(t => t.id === currentTakeaway.id);
+                if (index !== -1) {
+                    takeawayOrders[index] = takeaway;
+                    showAlert('Pesanan takeaway berhasil diupdate!', 'success');
+                }
+            } else {
+                // Add new takeaway
+                takeawayOrders.unshift(takeaway); // Add to beginning of array
+                showAlert('Pesanan takeaway berhasil disimpan!', 'success');
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('restaurant_takeaway', JSON.stringify(takeawayOrders));
+            
+            // Update UI
+            loadTakeawayList();
+            
+            // Switch to takeaway list tab
+            document.querySelector('[data-tab="list-takeaway"]').click();
+            
+            // Clear current takeaway
+            clearTakeawayWithoutConfirm();
+        }
+        
+        // Function to clear current takeaway tanpa konfirmasi
+        function clearTakeawayWithoutConfirm() {
+            currentTakeaway = {
+                id: null,
+                customerName: '',
+                items: [],
+                total: 0
+            };
+            
+            // Clear form fields
+            document.getElementById('customerNameTakeaway').value = '';
+            document.getElementById('searchMenuTakeaway').value = '';
+            document.getElementById('itemQuantityTakeaway').value = 1;
+            document.getElementById('itemNotesTakeaway').value = '';
+            
+            // Update UI
+            loadTakeawayItems();
+            updateTakeawayActionButtons();
+            
+            // Clear from localStorage
+            localStorage.removeItem('restaurant_current_takeaway');
+        }
+        
+        // Function to load and display takeaway list
+        function loadTakeawayList() {
+            const container = document.getElementById('takeawayListContainer');
+            
+            if (takeawayOrders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-shopping-bag"></i>
+                        <h3>Belum ada pesanan takeaway</h3>
+                        <p>Pesanan takeaway yang disimpan akan muncul di sini</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // Sort takeaway orders by date (newest first)
+            const sortedTakeawayOrders = [...takeawayOrders].sort((a, b) => 
+                new Date(b.orderDate) - new Date(a.orderDate)
+            );
+            
+            container.innerHTML = sortedTakeawayOrders.map(order => {
+                const date = new Date(order.orderDate);
+                const formattedDate = date.toLocaleDateString('id-ID');
+                const formattedTime = date.toLocaleTimeString('id-ID', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                return `
+                    <div class="reservation-item takeaway-item">
+                        <div class="reservation-header">
+                            <div class="reservation-name">${order.customerName}</div>
+                            <div>
+                                <span class="reservation-date">${formattedDate}</span>
+                                <span class="reservation-time">${formattedTime}</span>
+                            </div>
+                        </div>
+                        <div class="reservation-total">
+                            <strong>${order.items.length} item</strong> - Total: Rp ${order.total.toLocaleString('id-ID')}
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-secondary" onclick="viewTakeawayInvoice(${order.id})">
+                                <i class="fas fa-eye"></i> Lihat Invoice
+                            </button>
+                            <button class="btn btn-sm btn-warning" onclick="editTakeawayOrder(${order.id})">
+                                <i class="fas fa-edit"></i> Edit Pesanan
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteTakeawayOrder(${order.id})">
+                                <i class="fas fa-trash"></i> Hapus
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            // Update count
+            updateTakeawayListCount();
+        }
+        
+        // Function to view takeaway invoice in modal
+        function viewTakeawayInvoice(id) {
+            const takeaway = takeawayOrders.find(t => t.id === id);
+            if (!takeaway) return;
+            
+            // Display invoice in modal
+            document.getElementById('modalInvoiceContent').textContent = takeaway.invoice;
+            document.getElementById('invoiceModal').style.display = 'flex';
+            
+            // Set up copy button
+            document.getElementById('copyModalInvoiceBtn').onclick = function() {
+                copyModalInvoiceToClipboard();
+            };
+        }
+        
+        // Function to edit a takeaway order
+        function editTakeawayOrder(id) {
+            const takeaway = takeawayOrders.find(t => t.id === id);
+            if (!takeaway) return;
+            
+            // Set current takeaway to order data
+            currentTakeaway = {
+                id: takeaway.id,
+                customerName: takeaway.customerName,
+                items: [...takeaway.items],
+                total: takeaway.total
+            };
+            
+            // Update form fields
+            document.getElementById('customerNameTakeaway').value = currentTakeaway.customerName;
+            
+            // Update UI
+            loadTakeawayItems();
+            
+            // Switch to takeaway tab
+            document.querySelector('[data-tab="takeaway"]').click();
+            
+            // Scroll to top
+            document.getElementById('takeaway').scrollIntoView({ behavior: 'smooth' });
+            
+            showAlert('Pesanan takeaway siap diedit. Lakukan perubahan lalu klik "Update Pesanan".', 'info');
+        }
+        
+        // Function to delete a takeaway order
+        function deleteTakeawayOrder(id) {
+            if (!confirm('Apakah Anda yakin ingin menghapus pesanan takeaway ini?')) {
+                return;
+            }
+            
+            takeawayOrders = takeawayOrders.filter(t => t.id !== id);
+            localStorage.setItem('restaurant_takeaway', JSON.stringify(takeawayOrders));
+            loadTakeawayList();
+            showAlert('Pesanan takeaway berhasil dihapus!', 'success');
+        }
+        
+        // ============ STORAGE FUNCTIONS ============
+        
         // Function to save current order to localStorage
         function saveCurrentOrder() {
             localStorage.setItem('restaurant_current_order', JSON.stringify(currentOrder));
@@ -2306,11 +2937,38 @@ Es Teh Manis,8000</pre>
                 
                 // Update form fields
                 document.getElementById('customerName').value = currentOrder.customerName || '';
-                document.getElementById('reservationDate').value = currentOrder.reservationDate || new Date().toISOString().split('T')[0];
+                document.getElementById('reservationDate').value = currentOrder.reservationDate || '';
                 
                 // Update UI
                 loadOrderItems();
-                updateActionButtons();
+                updateOrderActionButtons();
+                
+                // Generate and display invoice if there are items
+                if (currentOrder.items.length > 0 && currentOrder.customerName && currentOrder.reservationDate) {
+                    const invoiceText = generateInvoice();
+                    document.getElementById('invoiceOutput').textContent = invoiceText;
+                    document.getElementById('invoiceSection').style.display = 'block';
+                }
+            }
+        }
+        
+        // Function to save current takeaway to localStorage
+        function saveCurrentTakeaway() {
+            localStorage.setItem('restaurant_current_takeaway', JSON.stringify(currentTakeaway));
+        }
+        
+        // Function to load current takeaway from localStorage
+        function loadCurrentTakeaway() {
+            const savedTakeaway = JSON.parse(localStorage.getItem('restaurant_current_takeaway'));
+            if (savedTakeaway) {
+                currentTakeaway = savedTakeaway;
+                
+                // Update form fields
+                document.getElementById('customerNameTakeaway').value = currentTakeaway.customerName || '';
+                
+                // Update UI
+                loadTakeawayItems();
+                updateTakeawayActionButtons();
             }
         }
         
