@@ -2,29 +2,10 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Sistem Pesanan Restoran</title>
     
-    <!-- Redirect untuk PWA yang terinstal -->
-    <script>
-        // Fix for installed PWA opening wrong URL
-        if (window.location.pathname !== '/' && 
-            window.location.pathname !== '/index.html' &&
-            window.location.pathname !== '/restaurant-order-app/' &&
-            !window.location.pathname.endsWith('.html')) {
-            
-            // Check if this is likely an installed PWA
-            if (window.matchMedia('(display-mode: standalone)').matches || 
-                window.navigator.standalone === true) {
-                
-                console.log('PWA opened with wrong path:', window.location.pathname);
-                // Redirect to main page
-                window.location.replace('./');
-            }
-        }
-    </script>
-    
-    <!-- PWA Meta Tags -->
+    <!-- PWA Configuration -->
     <meta name="application-name" content="Resto Order">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -33,61 +14,15 @@
     <meta name="theme-color" content="#2c3e50">
     <meta name="mobile-web-app-capable" content="yes">
     
-    <!-- Manifest dengan path relatif -->
-    <link rel="manifest" href="./manifest.json" crossorigin="use-credentials">
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
     
     <!-- Icons -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍽️</text></svg>">
-    <link rel="shortcut icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍽️</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍽️</text></svg>">
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <script>
-    // Fix Service Worker Registration
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            // Coba beberapa path untuk Service Worker
-            const swPaths = [
-                './service-worker.js',
-                '/service-worker.js',
-                'service-worker.js'
-            ];
-            
-            let registrationAttempted = false;
-            
-            swPaths.forEach(function(swPath) {
-                if (!registrationAttempted) {
-                    navigator.serviceWorker.register(swPath)
-                        .then(function(registration) {
-                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                            registrationAttempted = true;
-                            
-                            // Check for updates
-                            registration.onupdatefound = function() {
-                                const installingWorker = registration.installing;
-                                installingWorker.onstatechange = function() {
-                                    if (installingWorker.state === 'installed') {
-                                        if (navigator.serviceWorker.controller) {
-                                            console.log('New content is available; please refresh.');
-                                        } else {
-                                            console.log('Content is cached for offline use.');
-                                        }
-                                    }
-                                };
-                            };
-                        })
-                        .catch(function(err) {
-                            console.log('ServiceWorker registration failed for', swPath, ': ', err);
-                        });
-                }
-            });
-        });
-    } else {
-        console.log('Service Worker is not supported');
-    }
-    </script>
     
     <style>
         * {
@@ -675,7 +610,7 @@
             margin-bottom: 10px;
         }
         
-        /* Install Button Styling */
+        /* PWA Install Button */
         #installButton {
             position: fixed;
             bottom: 80px;
@@ -707,8 +642,8 @@
             100% { transform: scale(1); }
         }
         
-        /* PWA Standalone Mode */
-        body.standalone-mode {
+        /* PWA Mode */
+        body.pwa-mode {
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
         }
@@ -759,7 +694,7 @@
                 font-size: 0.9rem;
             }
             
-            body.standalone-mode {
+            body.pwa-mode {
                 padding-top: 20px;
             }
         }
@@ -810,7 +745,7 @@
             <div class="file-input-container">
                 <label for="importFile" class="file-input-label">
                     <i class="fas fa-file-import" style="margin-right: 8px;"></i>
-                    Klik untuk Import Data Menu dari CSV (ACode)
+                    Klik untuk Import Data Menu dari CSV
                 </label>
                 <input type="file" id="importFile" class="file-input" accept=".csv, .txt">
             </div>
@@ -1087,6 +1022,90 @@ Es Teh Manis,8000</pre>
     <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 300px;"></div>
 
     <script>
+        // ============ PWA INSTALLATION ============
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('PWA install prompt available');
+            // Prevent Chrome 67 and earlier from automatically showing the prompt
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            // Show install button
+            showInstallButton();
+        });
+        
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('App installed successfully');
+            hideInstallButton();
+            showAlert('Aplikasi berhasil diinstal! 🎉', 'success');
+        });
+        
+        function showInstallButton() {
+            // Don't show if already installed
+            if (window.matchMedia('(display-mode: standalone)').matches || 
+                window.navigator.standalone === true) {
+                return;
+            }
+            
+            // Remove existing button
+            const existingBtn = document.getElementById('installButton');
+            if (existingBtn) return;
+            
+            // Create install button
+            const installBtn = document.createElement('button');
+            installBtn.id = 'installButton';
+            installBtn.innerHTML = '<i class="fas fa-download"></i> Install App';
+            installBtn.onclick = installPWA;
+            
+            // Add to body
+            document.body.appendChild(installBtn);
+            
+            // Show info after delay
+            setTimeout(() => {
+                showAlert('Instal aplikasi untuk pengalaman lebih baik! Klik tombol "Install App" di kanan bawah.', 'info');
+            }, 2000);
+        }
+        
+        function hideInstallButton() {
+            const btn = document.getElementById('installButton');
+            if (btn) {
+                btn.style.display = 'none';
+            }
+        }
+        
+        function installPWA() {
+            if (!deferredPrompt) {
+                showAlert('Browser tidak mendukung instalasi aplikasi. Gunakan "Add to Home Screen" dari menu browser.', 'warning');
+                return;
+            }
+            
+            // Show the install prompt
+            deferredPrompt.prompt();
+            
+            // Wait for the user to respond to the prompt
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    console.log('User accepted the install prompt');
+                    showAlert('Aplikasi berhasil diinstal! 🎉', 'success');
+                } else {
+                    console.log('User dismissed the install prompt');
+                    showAlert('Instalasi dibatalkan. Anda dapat menginstal nanti dari tombol Install App.', 'info');
+                }
+                deferredPrompt = null;
+            });
+        }
+        
+        // Check if running as PWA
+        if (window.matchMedia('(display-mode: standalone)').matches || 
+            window.navigator.standalone === true) {
+            console.log('Running as PWA');
+            document.body.classList.add('pwa-mode');
+            hideInstallButton();
+        }
+        
+        // ============ APPLICATION CODE ============
+        
         // Data storage
         let menuItems = JSON.parse(localStorage.getItem('restaurant_menu')) || [];
         let reservations = JSON.parse(localStorage.getItem('restaurant_reservations')) || [];
@@ -1098,20 +1117,13 @@ Es Teh Manis,8000</pre>
             total: 0
         };
         
-        // PWA Installation
-        let deferredPrompt;
-        let installButton;
-        
         // DOM Elements
         const tabElements = document.querySelectorAll('.tab');
         const tabContentElements = document.querySelectorAll('.tab-content');
         
         // Initialize the app
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM Content Loaded - Initializing app');
-            
-            // Fix untuk GitHub Pages 404 issue
-            fixPWA404Issue();
+            console.log('Restaurant Order System Initialized');
             
             // Load initial data
             loadMenuItems();
@@ -1291,37 +1303,11 @@ Es Teh Manis,8000</pre>
             // Load any existing order from localStorage
             loadCurrentOrder();
             
-            // Initialize PWA
-            initPWA();
-            
-            console.log('App initialized successfully');
+            // Show welcome message
+            setTimeout(() => {
+                showAlert('Selamat datang di Sistem Pesanan Restoran!', 'info');
+            }, 1000);
         });
-        
-        // Fix untuk PWA 404 issue
-        function fixPWA404Issue() {
-            // Jika kita sudah di halaman utama, tidak perlu redirect
-            const currentPath = window.location.pathname;
-            const isRoot = currentPath === '/' || 
-                          currentPath === '/index.html' || 
-                          currentPath.endsWith('/') ||
-                          currentPath.includes('github.io');
-            
-            if (!isRoot) {
-                console.log('Non-root path detected:', currentPath);
-                
-                // Cek apakah ini PWA yang terinstal
-                const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-                const isIOSStandalone = window.navigator.standalone === true;
-                
-                if (isStandalone || isIOSStandalone) {
-                    console.log('PWA launched from wrong path, redirecting to root');
-                    // Redirect ke root setelah sedikit delay
-                    setTimeout(() => {
-                        window.location.href = './';
-                    }, 100);
-                }
-            }
-        }
         
         // Function to add a new menu item
         function addMenuItem() {
@@ -1616,7 +1602,7 @@ Es Teh Manis,8000</pre>
             showAlert('Data menu berhasil diexport!', 'success');
         }
         
-        // Function untuk import dari file CSV (untuk ACode)
+        // Function untuk import dari file CSV
         function importMenuFromCSV(event) {
             const file = event.target.files[0];
             if (!file) {
@@ -1993,13 +1979,13 @@ Es Teh Manis,8000</pre>
             // Calculate DP
             const dpAmount = calculateDP(currentOrder.total);
             
-            // Generate invoice text sesuai format yang baru
+            // Generate invoice text
             let invoiceText = "Berikut rekapan pesanannya:\n\n";
             invoiceText += `Nama : ${currentOrder.customerName}\n`;
             invoiceText += `Tanggal Reservasi : ${formattedDate}\n\n`;
             invoiceText += "Pesanan:\n";
             
-            // Format setiap item: jumlah, nama menu, catatan (jika ada), subtotal
+            // Format setiap item
             currentOrder.items.forEach((item) => {
                 const qty = item.quantity.toString().padStart(2);
                 let nameWithNotes = item.name;
@@ -2008,7 +1994,6 @@ Es Teh Manis,8000</pre>
                 }
                 const subtotal = "Rp" + item.subtotal.toLocaleString('id-ID');
                 
-                // Format: 2   Nasi Goreng Jakarta (1 pedas) Rp74.000
                 invoiceText += `${qty}   ${nameWithNotes} ${subtotal}\n`;
             });
             
@@ -2088,7 +2073,7 @@ Es Teh Manis,8000</pre>
             const activeReservations = reservations.filter(r => r.reservationDate >= today);
             const pastReservations = reservations.filter(r => r.reservationDate < today);
             
-            // Sort reservations by date (newest first for active, oldest first for past)
+            // Sort reservations by date
             const sortedActiveReservations = [...activeReservations].sort((a, b) => 
                 new Date(a.reservationDate) - new Date(b.reservationDate)
             );
@@ -2205,10 +2190,10 @@ Es Teh Manis,8000</pre>
             // Update UI
             loadReservations();
             
-            // Switch to reservations tab (show active reservations)
+            // Switch to reservations tab
             document.querySelector('[data-tab="reservations"]').click();
             
-            // Clear current order tanpa konfirmasi
+            // Clear current order
             clearOrderWithoutConfirm();
         }
         
@@ -2257,7 +2242,7 @@ Es Teh Manis,8000</pre>
             document.getElementById('modalInvoiceContent').textContent = reservation.invoice;
             document.getElementById('invoiceModal').style.display = 'flex';
             
-            // Set up copy button for this specific invoice
+            // Set up copy button
             document.getElementById('copyModalInvoiceBtn').onclick = function() {
                 copyModalInvoiceToClipboard();
             };
@@ -2290,7 +2275,7 @@ Es Teh Manis,8000</pre>
             // Switch to order tab
             document.querySelector('[data-tab="order"]').click();
             
-            // Scroll to top of order form
+            // Scroll to top
             document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
             
             showAlert('Pesanan siap diedit. Lakukan perubahan lalu klik "Update Pesanan".', 'info');
@@ -2361,293 +2346,14 @@ Es Teh Manis,8000</pre>
             }, 3000);
         }
         
-        // ============ PWA Functions ============
-        
-        // Function to check PWA requirements
-        function checkPWARequirements() {
-            const requirements = {
-                https: window.location.protocol === 'https:',
-                serviceWorker: 'serviceWorker' in navigator,
-                manifest: document.querySelector('link[rel="manifest"]') !== null,
-                installPrompt: 'BeforeInstallPromptEvent' in window,
-                displayMode: window.matchMedia('(display-mode: standalone)').matches
-            };
-            
-            console.log('PWA Requirements Check:', requirements);
-            return requirements;
-        }
-        
-        // Function to register Service Worker
-        // Function to register Service Worker
-function registerServiceWorker() {
-    if ('serviceWorker' in navigator) {
-        console.log('Service Worker supported');
-        
-        // Tunggu hingga halaman selesai loading
-        window.addEventListener('load', function() {
-            console.log('Page loaded, registering Service Worker...');
-            
-            // Coba beberapa path untuk kompatibilitas
-            const swPaths = [
-                './service-worker.js',
-                'service-worker.js',
-                '/service-worker.js'
-            ];
-            
-            let registered = false;
-            
-            swPaths.forEach(swPath => {
-                if (!registered) {
-                    navigator.serviceWorker.register(swPath, { scope: './' })
-                        .then(function(registration) {
-                            console.log('✅ Service Worker registered successfully:', swPath);
-                            console.log('Scope:', registration.scope);
-                            registered = true;
-                            
-                            // Update found
-                            registration.addEventListener('updatefound', () => {
-                                const newWorker = registration.installing;
-                                console.log('Service Worker update found:', newWorker.state);
-                                
-                                newWorker.addEventListener('statechange', () => {
-                                    console.log('Service Worker state changed to:', newWorker.state);
-                                    
-                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                        console.log('New content available, refresh needed');
-                                        showAlert('Versi baru tersedia! Silakan refresh halaman.', 'info');
-                                    }
-                                });
-                            });
-                        })
-                        .catch(function(error) {
-                            console.log('❌ Service Worker registration failed for', swPath, ':', error);
-                            
-                            // Coba path terakhir
-                            if (swPath === swPaths[swPaths.length - 1] && !registered) {
-                                console.log('All Service Worker paths failed');
-                                showAlert('Service Worker gagal didaftarkan. Beberapa fitur offline mungkin tidak tersedia.', 'warning');
-                            }
-                        });
-                }
-            });
-        });
-    } else {
-        console.log('Service Worker not supported');
-        showAlert('Browser tidak mendukung Service Worker. Beberapa fitur offline tidak tersedia.', 'warning');
-    }
-}
-        
-        // Function to setup PWA install prompt
-        function setupPWAInstall() {
-            window.addEventListener('beforeinstallprompt', (e) => {
-                console.log('beforeinstallprompt event fired');
-                
-                // Prevent Chrome 67 and earlier from automatically showing the prompt
-                e.preventDefault();
-                
-                // Stash the event so it can be triggered later
-                deferredPrompt = e;
-                
-                // Show install promotion
-                showInstallPromotion();
-                
-                console.log('PWA install prompt available');
-            });
-            
-            // Listen for app installed event
-            window.addEventListener('appinstalled', (evt) => {
-                console.log('App was installed');
-                hideInstallPromotion();
-                showAlert('Aplikasi berhasil diinstal! 🎉', 'success');
-                
-                // Log installation
-                console.log('PWA installed successfully at:', new Date().toISOString());
-            });
-            
-            // Check if already installed
-            if (window.matchMedia('(display-mode: standalone)').matches) {
-                console.log('App running in standalone mode');
-                hideInstallPromotion();
-                
-                // Add standalone mode indicator
-                document.body.classList.add('standalone-mode');
-                
-                // Log standalone mode
-                console.log('App launched in standalone mode');
-            }
-            
-            // Also check for iOS standalone mode
-            if (window.navigator.standalone === true) {
-                console.log('iOS standalone mode detected');
-                hideInstallPromotion();
-                document.body.classList.add('standalone-mode');
-                console.log('iOS app launched in standalone mode');
-            }
-        }
-        
-        // Function to show install promotion
-        function showInstallPromotion() {
-            // Check if install button already exists
-            if (document.getElementById('installButton')) {
-                return;
-            }
-            
-            // Don't show install button if already in standalone mode
-            if (window.matchMedia('(display-mode: standalone)').matches || 
-                window.navigator.standalone === true) {
-                console.log('Not showing install button - already in standalone mode');
-                return;
-            }
-            
-            // Check if we can prompt for installation
-            if (!deferredPrompt) {
-                console.log('No install prompt available yet');
-                return;
-            }
-            
-            // Create install button
-            installButton = document.createElement('button');
-            installButton.id = 'installButton';
-            installButton.innerHTML = '<i class="fas fa-download"></i> Install App';
-            installButton.onclick = installPWA;
-            
-            // Add button to body
-            document.body.appendChild(installButton);
-            
-            console.log('Install button shown');
-            
-            // Show info message
-            setTimeout(() => {
-                showAlert('🎉 Instal sebagai aplikasi untuk pengalaman lebih baik!', 'info');
-            }, 3000);
-        }
-        
-        // Function to hide install promotion
-        function hideInstallPromotion() {
-            if (installButton) {
-                installButton.style.display = 'none';
-                console.log('Install button hidden');
-            }
-        }
-        
-        // Function to install PWA
-        function installPWA() {
-            if (!deferredPrompt) {
-                showAlert('Browser tidak mendukung instalasi aplikasi. Gunakan "Add to Home Screen" dari menu browser.', 'warning');
-                return;
-            }
-            
-            console.log('Showing install prompt');
-            
-            // Show the install prompt
-            deferredPrompt.prompt();
-            
-            // Wait for the user to respond to the prompt
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted the install prompt');
-                    showAlert('Aplikasi berhasil diinstal! 🎉', 'success');
-                    hideInstallPromotion();
-                    
-                    // Log successful installation
-                    console.log('User installed the PWA');
-                    
-                    // Reload to ensure proper standalone mode (optional)
-                    setTimeout(() => {
-                        console.log('Reloading for standalone mode');
-                        window.location.reload();
-                    }, 1000);
-                } else {
-                    console.log('User dismissed the install prompt');
-                    showAlert('Instalasi dibatalkan. Anda dapat menginstal nanti dari tombol Install App.', 'info');
-                }
-                
-                // Clear the deferredPrompt variable
-                deferredPrompt = null;
-            });
-        }
-        
-        // Initialize PWA
-        function initPWA() {
-            console.log('Initializing PWA...');
-            
-            // Check requirements
-            const requirements = checkPWARequirements();
-            
-            // Log current URL for debugging
-            console.log('Current URL:', window.location.href);
-            console.log('Current path:', window.location.pathname);
-            
-            if (!requirements.https) {
-                console.warn('PWA requires HTTPS. Running on:', window.location.protocol);
-                showAlert('PWA membutuhkan HTTPS. Beberapa fitur mungkin tidak berfungsi.', 'warning');
-            }
-            
-            if (!requirements.serviceWorker) {
-                console.warn('Service Worker not supported');
-                showAlert('Browser tidak mendukung Service Worker. Beberapa fitur offline tidak tersedia.', 'warning');
-            }
-            
-            // Register service worker
-            registerServiceWorker();
-            
-            // Setup install prompt
-            setupPWAInstall();
-            
-            // Show PWA status
-            setTimeout(() => {
-                if (requirements.serviceWorker && requirements.manifest) {
-                    console.log('✅ PWA ready for installation');
-                    
-                    // Check if we're running from installed app
-                    if (requirements.displayMode) {
-                        console.log('✅ App running in standalone PWA mode');
-                        showAlert('Aplikasi berjalan dalam mode standalone 🎉', 'success');
-                    }
-                }
-            }, 1000);
-            
-            // Handle deep links
-            if (window.location.hash) {
-                console.log('Hash detected:', window.location.hash);
-                // You can handle deep linking here if needed
-            }
-        }
-        
         // Handle offline/online status
-        function setupNetworkStatus() {
-            if (navigator.onLine) {
-                console.log('Initial status: Online');
-            } else {
-                console.log('Initial status: Offline');
-                showAlert('Anda sedang offline. Data disimpan secara lokal.', 'warning');
-            }
-        }
-        // Clear old Service Workers
-function clearOldServiceWorkers() {
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations()
-      .then(registrations => {
-        for (let registration of registrations) {
-          console.log('Unregistering Service Worker:', registration.scope);
-          registration.unregister();
-        }
-      })
-      .then(() => {
-        console.log('All Service Workers unregistered');
-        // Clear cache
-        caches.keys().then(cacheNames => {
-          cacheNames.forEach(cacheName => {
-            caches.delete(cacheName);
-            console.log('Deleted cache:', cacheName);
-          });
+        window.addEventListener('online', () => {
+            showAlert('Koneksi internet tersedia', 'success');
         });
-      });
-  }
-}
-
-// Call this if having issues
-// clearOldServiceWorkers();
+        
+        window.addEventListener('offline', () => {
+            showAlert('Anda sedang offline. Data disimpan secara lokal.', 'warning');
+        });
     </script>
 </body>
 </html>
