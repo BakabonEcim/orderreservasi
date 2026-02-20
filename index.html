@@ -788,8 +788,8 @@
                 <button id="downloadTemplateBtn" class="btn btn-info">
                     <i class="fas fa-download"></i> Download Template CSV
                 </button>
-                <button id="exportMenuBtn" class="btn btn-secondary">
-                    <i class="fas fa-file-export"></i> Export Data Menu
+                <button id="exportMenuBtn" class="btn btn-success">
+                    <i class="fas fa-file-export"></i> Export Menu CSV
                 </button>
             </div>
             
@@ -1835,9 +1835,8 @@ Es Teh Manis,8000</pre>
                     document.getElementById(`searchMenu${type.charAt(0).toUpperCase() + type.slice(1)}`).value = name;
                     autocompleteList.style.display = 'none';
                     
-                    // Focus on quantity input
-                    document.getElementById(`itemQuantity${type.charAt(0).toUpperCase() + type.slice(1)}`).focus();
-                    document.getElementById(`itemQuantity${type.charAt(0).toUpperCase() + type.slice(1)}`).select();
+                    // Tidak memfokuskan ke input jumlah - keyboard tidak muncul otomatis
+                    // Pengguna cukup menggunakan tombol +/- tanpa keyboard
                 });
             });
         }
@@ -1911,7 +1910,7 @@ Es Teh Manis,8000</pre>
             document.getElementById('autocompleteListOrder').style.display = 'none';
             quantityInput.value = 1;
             notesInput.value = '';
-            searchInput.focus();
+            searchInput.focus(); // Fokus kembali ke kolom pencarian
             
             showAlert('Item berhasil ditambahkan ke pesanan!', 'success');
         }
@@ -2012,6 +2011,9 @@ Es Teh Manis,8000</pre>
             document.getElementById('editItemPrice').textContent = `Rp ${item.price.toLocaleString('id-ID')}`;
             document.getElementById('editItemIndex').value = index;
             
+            // Set modal type untuk order
+            document.getElementById('editItemModal').setAttribute('data-type', 'order');
+            
             // Calculate and display subtotal
             updateEditItemSubtotal();
             
@@ -2024,12 +2026,17 @@ Es Teh Manis,8000</pre>
             const quantityInput = document.getElementById('editItemQuantity');
             const quantity = parseInt(quantityInput.value) || 1;
             const index = parseInt(document.getElementById('editItemIndex').value);
+            const itemType = document.getElementById('editItemModal').getAttribute('data-type') || 'order';
             
-            if (index >= 0 && currentOrder.items[index]) {
-                const price = currentOrder.items[index].price;
-                const subtotal = price * quantity;
-                document.getElementById('editItemSubtotal').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
+            let price = 0;
+            if (itemType === 'order' && index >= 0 && currentOrder.items[index]) {
+                price = currentOrder.items[index].price;
+            } else if (itemType === 'takeaway' && index >= 0 && currentTakeaway.items[index]) {
+                price = currentTakeaway.items[index].price;
             }
+            
+            const subtotal = price * quantity;
+            document.getElementById('editItemSubtotal').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
         }
         
         // Function to update order item from modal
@@ -2037,19 +2044,30 @@ Es Teh Manis,8000</pre>
             const index = parseInt(document.getElementById('editItemIndex').value);
             const newQuantity = parseInt(document.getElementById('editItemQuantity').value);
             const newNotes = document.getElementById('editItemNotes').value.trim();
+            const itemType = document.getElementById('editItemModal').getAttribute('data-type') || 'order';
             
             if (isNaN(newQuantity) || newQuantity < 1) {
                 showAlert('Jumlah harus minimal 1!', 'danger');
                 return;
             }
             
-            currentOrder.items[index].quantity = newQuantity;
-            currentOrder.items[index].notes = newNotes;
-            currentOrder.items[index].subtotal = currentOrder.items[index].price * newQuantity;
-            
-            updateOrderTotal();
-            saveCurrentOrder();
-            loadOrderItems();
+            if (itemType === 'order') {
+                currentOrder.items[index].quantity = newQuantity;
+                currentOrder.items[index].notes = newNotes;
+                currentOrder.items[index].subtotal = currentOrder.items[index].price * newQuantity;
+                
+                updateOrderTotal();
+                saveCurrentOrder();
+                loadOrderItems();
+            } else if (itemType === 'takeaway') {
+                currentTakeaway.items[index].quantity = newQuantity;
+                currentTakeaway.items[index].notes = newNotes;
+                currentTakeaway.items[index].subtotal = currentTakeaway.items[index].price * newQuantity;
+                
+                updateTakeawayTotal();
+                saveCurrentTakeaway();
+                loadTakeawayItems();
+            }
             
             // Close modal
             document.getElementById('editItemModal').style.display = 'none';
@@ -2525,7 +2543,7 @@ Es Teh Manis,8000</pre>
             document.getElementById('autocompleteListTakeaway').style.display = 'none';
             quantityInput.value = 1;
             notesInput.value = '';
-            searchInput.focus();
+            searchInput.focus(); // Fokus kembali ke kolom pencarian
             
             showAlert('Item berhasil ditambahkan ke pesanan takeaway!', 'success');
         }
@@ -2625,41 +2643,14 @@ Es Teh Manis,8000</pre>
             document.getElementById('editItemPrice').textContent = `Rp ${item.price.toLocaleString('id-ID')}`;
             document.getElementById('editItemIndex').value = index;
             
+            // Set modal type untuk takeaway
+            document.getElementById('editItemModal').setAttribute('data-type', 'takeaway');
+            
             // Calculate and display subtotal
             updateEditItemSubtotal();
             
             // Show modal
             document.getElementById('editItemModal').style.display = 'flex';
-        }
-        
-        // Function to update takeaway item from modal
-        function updateTakeawayItem() {
-            const index = parseInt(document.getElementById('editItemIndex').value);
-            const newQuantity = parseInt(document.getElementById('editItemQuantity').value);
-            const newNotes = document.getElementById('editItemNotes').value.trim();
-            
-            if (isNaN(newQuantity) || newQuantity < 1) {
-                showAlert('Jumlah harus minimal 1!', 'danger');
-                return;
-            }
-            
-            // Check if we're editing order or takeaway
-            const itemType = document.getElementById('editItemModal').getAttribute('data-type') || 'order';
-            
-            if (itemType === 'takeaway') {
-                currentTakeaway.items[index].quantity = newQuantity;
-                currentTakeaway.items[index].notes = newNotes;
-                currentTakeaway.items[index].subtotal = currentTakeaway.items[index].price * newQuantity;
-                
-                updateTakeawayTotal();
-                saveCurrentTakeaway();
-                loadTakeawayItems();
-            }
-            
-            // Close modal
-            document.getElementById('editItemModal').style.display = 'none';
-            
-            showAlert('Item berhasil diupdate!', 'success');
         }
         
         // Function to remove an item from takeaway
@@ -2687,6 +2678,12 @@ Es Teh Manis,8000</pre>
             const hasItems = currentTakeaway.items.length > 0;
             
             document.getElementById('saveTakeawayBtn').disabled = !hasItems;
+            
+            if (currentTakeaway.id) {
+                document.getElementById('saveTakeawayBtn').innerHTML = '<i class="fas fa-save"></i> Update Pesanan Takeaway';
+            } else {
+                document.getElementById('saveTakeawayBtn').innerHTML = '<i class="fas fa-save"></i> Simpan Pesanan ke List Takeaway';
+            }
         }
         
         // Function to generate takeaway invoice
