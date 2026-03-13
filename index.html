@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Resto Order">
-    <meta name="description" content="Aplikasi online dengan Firebase untuk mengelola menu, pesanan, dan invoice restoran">
+    <meta name="description" content="Aplikasi online dengan Firebase untuk mengelola menu, kategori, pesanan, dan invoice restoran">
     <meta name="theme-color" content="#2c3e50">
     <meta name="mobile-web-app-capable" content="yes">
     
@@ -30,6 +30,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
+        /* ... (semua style sebelumnya tetap, ditambah beberapa style baru untuk kategori) ... */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -389,9 +390,38 @@
             font-size: 1.1rem;
         }
         
+        .menu-categories {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-top: 3px;
+        }
+        
+        .menu-categories span {
+            background-color: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-right: 5px;
+            display: inline-block;
+        }
+        
         .menu-actions {
             display: flex;
             gap: 8px;
+        }
+        
+        .category-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        
+        .category-name {
+            font-weight: bold;
+            color: #2c3e50;
         }
         
         .order-item {
@@ -863,6 +893,47 @@
             color: #2c3e50;
         }
         
+        /* Card kategori di laporan */
+        .category-card {
+            background-color: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+        
+        .category-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .category-total {
+            font-size: 1rem;
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+        
+        .category-items {
+            margin-left: 20px;
+        }
+        
+        .category-item-detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        
+        .category-item-name {
+            font-weight: 500;
+        }
+        
+        .category-item-qty {
+            font-weight: bold;
+        }
+        
         @media (max-width: 600px) {
             .form-row {
                 flex-direction: column;
@@ -937,7 +1008,7 @@
     
     <div class="header">
         <h1><i class="fas fa-utensils"></i> Sistem Pesanan Restoran</h1>
-        <p>Aplikasi online dengan Firebase untuk mengelola menu, pesanan, dan invoice</p>
+        <p>Aplikasi online dengan Firebase untuk mengelola menu, kategori, pesanan, dan invoice</p>
         <div id="userInfo" class="user-info" style="display: none;">
             <i class="fas fa-user"></i>
             <span id="userEmail"></span>
@@ -1003,6 +1074,10 @@
                 <i class="fas fa-book"></i>
                 <span>Data Master</span>
             </div>
+            <div class="tab" data-tab="categories">
+                <i class="fas fa-tags"></i>
+                <span>Kategori</span>
+            </div>
             <div class="tab" data-tab="order">
                 <i class="fas fa-plus-circle"></i>
                 <span>Buat Pesanan</span>
@@ -1023,7 +1098,6 @@
                 <i class="fas fa-list"></i>
                 <span>List Takeaway</span>
             </div>
-            <!-- NEW: Tab Laporan Harian -->
             <div class="tab" data-tab="daily-report">
                 <i class="fas fa-chart-bar"></i>
                 <span>Laporan Harian</span>
@@ -1104,6 +1178,14 @@ Es Teh Manis,8000</pre>
                     <input type="number" id="menuPrice" class="form-control" placeholder="Contoh: 25000">
                 </div>
                 
+                <!-- NEW: Kategori -->
+                <div class="form-group">
+                    <label>Kategori (bisa pilih lebih dari satu):</label>
+                    <div id="menuCategoriesContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
+                        <!-- Kategori akan di-load di sini sebagai checkbox -->
+                    </div>
+                </div>
+                
                 <button id="addMenuBtn" class="btn btn-success">
                     <i class="fas fa-plus"></i> Tambah Menu ke Firebase
                 </button>
@@ -1115,6 +1197,25 @@ Es Teh Manis,8000</pre>
                 <div id="menuItemsContainer">
                     <!-- Menu items will be loaded here -->
                 </div>
+            </div>
+        </div>
+        
+        <!-- NEW: Tab Kategori -->
+        <div id="categories" class="tab-content">
+            <h2 style="margin-bottom: 20px; color: #2c3e50;">Manajemen Kategori</h2>
+            
+            <div class="form-group">
+                <label for="categoryName">Nama Kategori Baru:</label>
+                <input type="text" id="categoryName" class="form-control" placeholder="Contoh: Nasi Goreng">
+            </div>
+            
+            <button id="addCategoryBtn" class="btn btn-success">
+                <i class="fas fa-plus"></i> Tambah Kategori
+            </button>
+            
+            <h3 style="margin-top: 30px; margin-bottom: 15px; color: #2c3e50;">Daftar Kategori</h3>
+            <div id="categoriesListContainer">
+                <!-- Categories will be loaded here -->
             </div>
         </div>
         
@@ -1286,10 +1387,10 @@ Es Teh Manis,8000</pre>
             </div>
         </div>
         
-        <!-- NEW: Tab Laporan Harian -->
+        <!-- Tab Laporan Harian -->
         <div id="daily-report" class="tab-content">
             <h2 style="margin-bottom: 20px; color: #2c3e50;">Laporan Harian</h2>
-            <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 0.9rem;">Rangkuman jumlah porsi per menu pada tanggal tertentu</p>
+            <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 0.9rem;">Rangkuman jumlah porsi per menu dan per kategori pada tanggal tertentu</p>
             
             <div class="form-row">
                 <div class="form-group">
@@ -1297,7 +1398,7 @@ Es Teh Manis,8000</pre>
                     <input type="date" id="reportDate" class="form-control">
                 </div>
                 <div class="form-group">
-                    <label for="reportSort">Urutan:</label>
+                    <label for="reportSort">Urutan Menu:</label>
                     <select id="reportSort" class="form-control">
                         <option value="most">Paling Banyak</option>
                         <option value="least">Paling Sedikit</option>
@@ -1436,6 +1537,14 @@ Es Teh Manis,8000</pre>
                         <input type="number" id="editMenuPrice" class="form-control" placeholder="Harga menu">
                     </div>
                     
+                    <!-- NEW: Kategori di modal edit -->
+                    <div class="form-group">
+                        <label>Kategori (bisa pilih lebih dari satu):</label>
+                        <div id="editMenuCategoriesContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
+                            <!-- Kategori akan di-load di sini sebagai checkbox -->
+                        </div>
+                    </div>
+                    
                     <input type="hidden" id="editMenuId">
                     
                     <div class="btn-group" style="margin-top: 20px;">
@@ -1450,6 +1559,33 @@ Es Teh Manis,8000</pre>
             </div>
         </div>
         
+        <!-- Modal untuk Edit Kategori -->
+        <div id="editCategoryModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title">Edit Kategori</div>
+                    <button class="modal-close" id="closeEditCategoryModal">&times;</button>
+                </div>
+                <div id="editCategoryForm">
+                    <div class="form-group">
+                        <label for="editCategoryName">Nama Kategori:</label>
+                        <input type="text" id="editCategoryName" class="form-control" placeholder="Nama kategori">
+                    </div>
+                    
+                    <input type="hidden" id="editCategoryId">
+                    
+                    <div class="btn-group" style="margin-top: 20px;">
+                        <button id="updateCategoryBtn" class="btn btn-success">
+                            <i class="fas fa-check"></i> Update Kategori di Firebase
+                        </button>
+                        <button id="cancelEditCategoryBtn" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Batal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Alert container -->
         <div id="alertContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1000; max-width: 300px;"></div>
     </div>
@@ -1457,7 +1593,7 @@ Es Teh Manis,8000</pre>
     <script>
         // ============ FIREBASE CONFIGURATION ============
         // GANTI DENGAN KONFIGURASI FIREBASE ANDA!
-    const firebaseConfig = {
+        const firebaseConfig = {
 
   apiKey: "AIzaSyDyVwsEo3QuL0RfnCDhBdUw5Fp3VgJiy6c",
 
@@ -1720,6 +1856,7 @@ Es Teh Manis,8000</pre>
         
         // Data storage (now from Firebase)
         let menuItems = [];
+        let categories = [];
         let reservations = [];
         let takeawayOrders = [];
         
@@ -1785,6 +1922,9 @@ Es Teh Manis,8000</pre>
             
             // Event listener for adding menu
             document.getElementById('addMenuBtn').addEventListener('click', addMenuItem);
+            
+            // Event listener for adding category
+            document.getElementById('addCategoryBtn').addEventListener('click', addCategory);
             
             // Event listeners for order tab
             document.getElementById('addToOrderBtn').addEventListener('click', addItemToOrder);
@@ -1921,6 +2061,17 @@ Es Teh Manis,8000</pre>
                 document.getElementById('editMenuModal').style.display = 'none';
             });
             
+            // NEW: Event listener for close edit category modal
+            document.getElementById('closeEditCategoryModal').addEventListener('click', function() {
+                document.getElementById('editCategoryModal').style.display = 'none';
+            });
+            
+            document.getElementById('cancelEditCategoryBtn').addEventListener('click', function() {
+                document.getElementById('editCategoryModal').style.display = 'none';
+            });
+            
+            document.getElementById('updateCategoryBtn').addEventListener('click', updateCategory);
+            
             // Close modal when clicking outside
             document.getElementById('invoiceModal').addEventListener('click', function(e) {
                 if (e.target === this) {
@@ -1941,6 +2092,12 @@ Es Teh Manis,8000</pre>
             });
             
             document.getElementById('editMenuModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('editCategoryModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     this.style.display = 'none';
                 }
@@ -1967,7 +2124,7 @@ Es Teh Manis,8000</pre>
             document.getElementById('searchPastReservations')?.addEventListener('input', loadReservations);
             document.getElementById('searchTakeaway')?.addEventListener('input', loadTakeawayList);
             
-            // NEW: Event listener untuk laporan harian
+            // Event listener untuk laporan harian
             document.getElementById('generateReportBtn').addEventListener('click', generateDailyReport);
             
             // Show welcome message
@@ -1992,9 +2149,26 @@ Es Teh Manis,8000</pre>
                 });
                 loadMenuItems();
                 updateMenuCount();
+                // Update kategori checkboxes di form menu
+                renderCategoryCheckboxes();
             }, (error) => {
                 console.error('Error listening to menu:', error);
                 showAlert('Gagal memuat data menu dari Firebase', 'danger');
+            });
+            
+            // Listen for category changes
+            db.collection('categories').orderBy('name').onSnapshot((snapshot) => {
+                categories = [];
+                snapshot.forEach((doc) => {
+                    categories.push({
+                        id: doc.id,
+                        ...doc.data()
+                    });
+                });
+                loadCategories();
+                renderCategoryCheckboxes(); // untuk form tambah/edit menu
+            }, (error) => {
+                console.error('Error listening to categories:', error);
             });
             
             // Listen for reservation changes
@@ -2049,6 +2223,22 @@ Es Teh Manis,8000</pre>
                     showAlert('Gagal memuat data menu dari Firebase', 'danger');
                 });
             
+            // Categories
+            db.collection('categories').orderBy('name').get()
+                .then((snapshot) => {
+                    categories = [];
+                    snapshot.forEach((doc) => {
+                        categories.push({
+                            id: doc.id,
+                            ...doc.data()
+                        });
+                    });
+                    loadCategories();
+                })
+                .catch((error) => {
+                    console.error('Error loading categories:', error);
+                });
+            
             // Reservations
             db.collection('reservations').orderBy('reservationDate', 'desc').get()
                 .then((snapshot) => {
@@ -2084,6 +2274,46 @@ Es Teh Manis,8000</pre>
                 });
         }
         
+        // NEW: Function to render category checkboxes in add/edit menu form
+        function renderCategoryCheckboxes() {
+            const container = document.getElementById('menuCategoriesContainer');
+            const editContainer = document.getElementById('editMenuCategoriesContainer');
+            
+            if (!container && !editContainer) return;
+            
+            let html = '';
+            categories.forEach(cat => {
+                html += `
+                    <div style="margin-bottom: 5px;">
+                        <label>
+                            <input type="checkbox" class="category-checkbox" value="${cat.id}" data-category-name="${cat.name}">
+                            ${cat.name}
+                        </label>
+                    </div>
+                `;
+            });
+            
+            if (container) container.innerHTML = html || '<p>Belum ada kategori. Buat kategori terlebih dahulu.</p>';
+            if (editContainer) editContainer.innerHTML = html || '<p>Belum ada kategori.</p>';
+        }
+        
+        // NEW: Get selected categories from checkboxes
+        function getSelectedCategories(containerId) {
+            const checkboxes = document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked`);
+            return Array.from(checkboxes).map(cb => ({
+                id: cb.value,
+                name: cb.getAttribute('data-category-name')
+            }));
+        }
+        
+        // NEW: Set checkboxes based on menu's categories
+        function setSelectedCategories(containerId, categoryIds) {
+            const checkboxes = document.querySelectorAll(`#${containerId} input[type="checkbox"]`);
+            checkboxes.forEach(cb => {
+                cb.checked = categoryIds.includes(cb.value);
+            });
+        }
+        
         // Function to add a new menu item to Firebase
         function addMenuItem() {
             if (!isOnline) {
@@ -2101,6 +2331,7 @@ Es Teh Manis,8000</pre>
             
             const name = nameInput.value.trim();
             const price = parseInt(priceInput.value);
+            const selectedCategories = getSelectedCategories('menuCategoriesContainer');
             
             if (!name || !price || price <= 0) {
                 showAlert('Harap isi nama menu dan harga dengan benar!', 'danger');
@@ -2112,44 +2343,201 @@ Es Teh Manis,8000</pre>
                 item.name.toLowerCase() === name.toLowerCase()
             );
             
+            const menuData = {
+                name: name,
+                price: price,
+                categories: selectedCategories,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            
             if (existingMenu) {
                 // Update existing menu
-                db.collection('menu').doc(existingMenu.id).update({
-                    name: name,
-                    price: price
-                })
-                .then(() => {
-                    showAlert('Menu berhasil diperbarui di Firebase!', 'success');
-                })
-                .catch((error) => {
-                    console.error('Error updating menu:', error);
-                    showAlert('Gagal memperbarui menu di Firebase', 'danger');
-                });
+                db.collection('menu').doc(existingMenu.id).update(menuData)
+                    .then(() => {
+                        showAlert('Menu berhasil diperbarui di Firebase!', 'success');
+                    })
+                    .catch((error) => {
+                        console.error('Error updating menu:', error);
+                        showAlert('Gagal memperbarui menu di Firebase', 'danger');
+                    });
             } else {
                 // Add new menu item
-                db.collection('menu').add({
-                    name: name,
-                    price: price,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                })
-                .then(() => {
-                    showAlert('Menu berhasil ditambahkan ke Firebase!', 'success');
-                })
-                .catch((error) => {
-                    console.error('Error adding menu:', error);
-                    showAlert('Gagal menambahkan menu ke Firebase', 'danger');
-                });
+                menuData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                db.collection('menu').add(menuData)
+                    .then(() => {
+                        showAlert('Menu berhasil ditambahkan ke Firebase!', 'success');
+                    })
+                    .catch((error) => {
+                        console.error('Error adding menu:', error);
+                        showAlert('Gagal menambahkan menu ke Firebase', 'danger');
+                    });
             }
             
             // Clear inputs
             nameInput.value = '';
             priceInput.value = '';
+            // Reset checkboxes
+            const checkboxes = document.querySelectorAll('#menuCategoriesContainer input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = false);
             
             // Focus on name input
             nameInput.focus();
         }
         
-        // Function to load and display menu items
+        // NEW: Add category
+        function addCategory() {
+            if (!isOnline) {
+                showAlert('Anda sedang offline. Tidak dapat menambah kategori ke Firebase.', 'danger');
+                return;
+            }
+            
+            if (!auth.currentUser) {
+                showAlert('Anda harus login terlebih dahulu!', 'danger');
+                return;
+            }
+            
+            const nameInput = document.getElementById('categoryName');
+            const name = nameInput.value.trim();
+            
+            if (!name) {
+                showAlert('Harap isi nama kategori!', 'danger');
+                return;
+            }
+            
+            // Check if category already exists
+            const existing = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+            if (existing) {
+                showAlert('Kategori dengan nama yang sama sudah ada!', 'warning');
+                return;
+            }
+            
+            db.collection('categories').add({
+                name: name,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                showAlert('Kategori berhasil ditambahkan!', 'success');
+                nameInput.value = '';
+            })
+            .catch((error) => {
+                console.error('Error adding category:', error);
+                showAlert('Gagal menambah kategori', 'danger');
+            });
+        }
+        
+        // NEW: Load and display categories
+        function loadCategories() {
+            const container = document.getElementById('categoriesListContainer');
+            if (!container) return;
+            
+            if (categories.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-tags"></i>
+                        <h3>Belum ada kategori</h3>
+                        <p>Tambahkan kategori pertama Anda</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const sortedCategories = [...categories].sort((a, b) => a.name.localeCompare(b.name));
+            container.innerHTML = sortedCategories.map(cat => `
+                <div class="category-item">
+                    <span class="category-name">${cat.name}</span>
+                    <div class="menu-actions">
+                        <button class="btn btn-sm btn-warning" onclick="editCategory('${cat.id}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteCategory('${cat.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // NEW: Edit category
+        function editCategory(id) {
+            const category = categories.find(c => c.id === id);
+            if (!category) return;
+            
+            document.getElementById('editCategoryName').value = category.name;
+            document.getElementById('editCategoryId').value = id;
+            document.getElementById('editCategoryModal').style.display = 'flex';
+        }
+        
+        // NEW: Update category
+        function updateCategory() {
+            if (!isOnline) {
+                showAlert('Anda sedang offline. Tidak dapat mengupdate kategori.', 'danger');
+                return;
+            }
+            
+            const id = document.getElementById('editCategoryId').value;
+            const newName = document.getElementById('editCategoryName').value.trim();
+            
+            if (!newName) {
+                showAlert('Nama kategori tidak boleh kosong!', 'danger');
+                return;
+            }
+            
+            // Check duplicate
+            const duplicate = categories.find(c => c.id !== id && c.name.toLowerCase() === newName.toLowerCase());
+            if (duplicate) {
+                showAlert('Kategori dengan nama yang sama sudah ada!', 'warning');
+                return;
+            }
+            
+            db.collection('categories').doc(id).update({ name: newName })
+                .then(() => {
+                    showAlert('Kategori berhasil diupdate!', 'success');
+                    document.getElementById('editCategoryModal').style.display = 'none';
+                })
+                .catch((error) => {
+                    console.error('Error updating category:', error);
+                    showAlert('Gagal mengupdate kategori', 'danger');
+                });
+        }
+        
+        // NEW: Delete category
+        function deleteCategory(id) {
+            if (!isOnline) {
+                showAlert('Anda sedang offline. Tidak dapat menghapus kategori.', 'danger');
+                return;
+            }
+            
+            if (!confirm('Apakah Anda yakin ingin menghapus kategori ini? Menu yang menggunakan kategori ini tidak akan terhapus, tetapi kategori akan dihapus dari menu tersebut.')) {
+                return;
+            }
+            
+            // Hapus kategori dari semua menu yang menggunakannya
+            const batch = db.batch();
+            
+            // Update semua menu yang memiliki kategori ini
+            menuItems.forEach(menu => {
+                if (menu.categories && menu.categories.some(c => c.id === id)) {
+                    const newCategories = menu.categories.filter(c => c.id !== id);
+                    const menuRef = db.collection('menu').doc(menu.id);
+                    batch.update(menuRef, { categories: newCategories });
+                }
+            });
+            
+            // Hapus kategori itu sendiri
+            const categoryRef = db.collection('categories').doc(id);
+            batch.delete(categoryRef);
+            
+            batch.commit()
+                .then(() => {
+                    showAlert('Kategori berhasil dihapus!', 'success');
+                })
+                .catch((error) => {
+                    console.error('Error deleting category:', error);
+                    showAlert('Gagal menghapus kategori', 'danger');
+                });
+        }
+        
+        // Function to load and display menu items (modified to show categories)
         function loadMenuItems() {
             const container = document.getElementById('menuItemsContainer');
             
@@ -2169,22 +2557,29 @@ Es Teh Manis,8000</pre>
                 a.name.localeCompare(b.name)
             );
             
-            container.innerHTML = sortedMenuItems.map(item => `
-                <div class="menu-item" data-id="${item.id}">
-                    <div class="menu-details">
-                        <h4>${item.name}</h4>
-                        <div class="menu-price">Rp ${item.price.toLocaleString('id-ID')}</div>
+            container.innerHTML = sortedMenuItems.map(item => {
+                const categoriesHtml = item.categories && item.categories.length > 0 
+                    ? `<div class="menu-categories">${item.categories.map(c => `<span>${c.name}</span>`).join('')}</div>`
+                    : '';
+                    
+                return `
+                    <div class="menu-item" data-id="${item.id}">
+                        <div class="menu-details">
+                            <h4>${item.name}</h4>
+                            <div class="menu-price">Rp ${item.price.toLocaleString('id-ID')}</div>
+                            ${categoriesHtml}
+                        </div>
+                        <div class="menu-actions">
+                            <button class="btn btn-sm btn-warning" onclick="editMenuItem('${item.id}')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteMenuItem('${item.id}')">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
-                    <div class="menu-actions">
-                        <button class="btn btn-sm btn-warning" onclick="editMenuItem('${item.id}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteMenuItem('${item.id}')">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
         
         // Function to update menu count
@@ -2208,7 +2603,7 @@ Es Teh Manis,8000</pre>
             document.getElementById('takeawayListCount').textContent = takeawayOrders.length;
         }
         
-        // Function to edit a menu item
+        // Function to edit a menu item (modified to include categories)
         function editMenuItem(id) {
             const menuItem = menuItems.find(item => item.id === id);
             if (!menuItem) return;
@@ -2218,11 +2613,19 @@ Es Teh Manis,8000</pre>
             document.getElementById('editMenuPrice').value = menuItem.price;
             document.getElementById('editMenuId').value = id;
             
+            // Set category checkboxes
+            if (menuItem.categories) {
+                const categoryIds = menuItem.categories.map(c => c.id);
+                setSelectedCategories('editMenuCategoriesContainer', categoryIds);
+            } else {
+                setSelectedCategories('editMenuCategoriesContainer', []);
+            }
+            
             // Show modal
             document.getElementById('editMenuModal').style.display = 'flex';
         }
         
-        // Function to update a menu item in Firebase
+        // Function to update a menu item in Firebase (modified)
         function updateMenuItem() {
             if (!isOnline) {
                 showAlert('Anda sedang offline. Tidak dapat mengupdate menu di Firebase.', 'danger');
@@ -2237,6 +2640,7 @@ Es Teh Manis,8000</pre>
             const id = document.getElementById('editMenuId').value;
             const newName = document.getElementById('editMenuName').value.trim();
             const newPrice = parseInt(document.getElementById('editMenuPrice').value);
+            const selectedCategories = getSelectedCategories('editMenuCategoriesContainer');
             
             if (!newName || !newPrice || newPrice <= 0) {
                 showAlert('Harap isi nama menu dan harga dengan benar!', 'danger');
@@ -2256,7 +2660,9 @@ Es Teh Manis,8000</pre>
             // Update in Firebase
             db.collection('menu').doc(id).update({
                 name: newName,
-                price: newPrice
+                price: newPrice,
+                categories: selectedCategories,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
             })
             .then(() => {
                 showAlert('Menu berhasil diupdate di Firebase!', 'success');
@@ -2294,7 +2700,7 @@ Es Teh Manis,8000</pre>
                 });
         }
         
-        // Function untuk manual import dari textarea ke Firebase
+        // Function untuk manual import dari textarea ke Firebase (perlu disesuaikan dengan kategori? Bisa ditambahkan nanti, untuk sederhana kita abaikan dulu)
         function manualImportMenu() {
             if (!isOnline) {
                 showAlert('Anda sedang offline. Tidak dapat import ke Firebase.', 'danger');
@@ -2339,16 +2745,21 @@ Es Teh Manis,8000</pre>
                     );
                     
                     if (existingMenu) {
-                        // Update existing menu
+                        // Update existing menu (pertahankan kategori yang sudah ada)
                         const docRef = db.collection('menu').doc(existingMenu.id);
-                        batch.update(docRef, { name: name, price: price });
+                        batch.update(docRef, { 
+                            name: name, 
+                            price: price,
+                            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
                         updatedCount++;
                     } else {
-                        // Add new menu item
+                        // Add new menu item (tanpa kategori)
                         const newRef = db.collection('menu').doc();
                         batch.set(newRef, {
                             name: name,
                             price: price,
+                            categories: [],
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
                         });
                         importedCount++;
@@ -2522,8 +2933,7 @@ Es Teh Manis,8000</pre>
         }
         
         // ============ ORDER FUNCTIONS ============
-        
-        // Function to add an item to the current order
+        // (Sama seperti sebelumnya, tidak berubah)
         function addItemToOrder() {
             const searchInput = document.getElementById('searchMenuOrder');
             const quantityInput = document.getElementById('itemQuantityOrder');
@@ -2564,7 +2974,8 @@ Es Teh Manis,8000</pre>
                     price: menuItem.price,
                     quantity: quantity,
                     notes: notes,
-                    subtotal: menuItem.price * quantity
+                    subtotal: menuItem.price * quantity,
+                    categories: menuItem.categories || [] // simpan kategori untuk laporan
                 });
             }
             
@@ -2584,7 +2995,6 @@ Es Teh Manis,8000</pre>
             showAlert('Item berhasil ditambahkan ke pesanan!', 'success');
         }
         
-        // Function to load and display order items
         function loadOrderItems() {
             const container = document.getElementById('orderItemsContainer');
             const orderItemsCount = document.getElementById('orderItemsCount');
@@ -2634,7 +3044,6 @@ Es Teh Manis,8000</pre>
             orderItemsCount.textContent = currentOrder.items.length;
         }
         
-        // Function to change order item quantity using + or - buttons
         function changeOrderItemQuantity(index, change) {
             const newQuantity = currentOrder.items[index].quantity + change;
             
@@ -2650,7 +3059,6 @@ Es Teh Manis,8000</pre>
             loadOrderItems();
         }
         
-        // Function to update order item quantity from input
         function updateOrderItemQuantity(index, newQuantity) {
             newQuantity = parseInt(newQuantity);
             
@@ -2667,28 +3075,22 @@ Es Teh Manis,8000</pre>
             loadOrderItems();
         }
         
-        // Function to edit order item (open modal)
         function editOrderItem(index) {
             const item = currentOrder.items[index];
             
-            // Populate modal with item data
             document.getElementById('editItemMenu').value = item.name;
             document.getElementById('editItemQuantity').value = item.quantity;
             document.getElementById('editItemNotes').value = item.notes || '';
             document.getElementById('editItemPrice').textContent = `Rp ${item.price.toLocaleString('id-ID')}`;
             document.getElementById('editItemIndex').value = index;
             
-            // Set modal type untuk order
             document.getElementById('editItemModal').setAttribute('data-type', 'order');
             
-            // Calculate and display subtotal
             updateEditItemSubtotal();
             
-            // Show modal
             document.getElementById('editItemModal').style.display = 'flex';
         }
         
-        // Function to update edit item subtotal
         function updateEditItemSubtotal() {
             const quantityInput = document.getElementById('editItemQuantity');
             const quantity = parseInt(quantityInput.value) || 1;
@@ -2706,7 +3108,6 @@ Es Teh Manis,8000</pre>
             document.getElementById('editItemSubtotal').textContent = `Rp ${subtotal.toLocaleString('id-ID')}`;
         }
         
-        // Function to update order item from modal
         function updateOrderItem() {
             const index = parseInt(document.getElementById('editItemIndex').value);
             const newQuantity = parseInt(document.getElementById('editItemQuantity').value);
@@ -2734,13 +3135,11 @@ Es Teh Manis,8000</pre>
                 loadTakeawayItems();
             }
             
-            // Close modal
             document.getElementById('editItemModal').style.display = 'none';
             
             showAlert('Item berhasil diupdate!', 'success');
         }
         
-        // Function to remove an item from order
         function removeOrderItem(index) {
             if (!confirm('Apakah Anda yakin ingin menghapus item ini dari pesanan?')) {
                 return;
@@ -2752,26 +3151,18 @@ Es Teh Manis,8000</pre>
             showAlert('Item berhasil dihapus dari pesanan!', 'success');
         }
         
-        // Function to update order total
         function updateOrderTotal() {
             currentOrder.total = currentOrder.items.reduce((sum, item) => sum + item.subtotal, 0);
             document.getElementById('orderTotal').textContent = currentOrder.total.toLocaleString('id-ID');
             updateOrderActionButtons();
         }
         
-        // Function to calculate DP (down payment) - 50% of total rounded to nearest 50,000
         function calculateDP(total) {
-            // Calculate 50% of total
             const fiftyPercent = total * 0.5;
-            
-            // Round to nearest 50,000
             const roundedDP = Math.round(fiftyPercent / 50000) * 50000;
-            
-            // Ensure minimum is 50,000
             return Math.max(50000, roundedDP);
         }
         
-        // Function to update order action buttons state
         function updateOrderActionButtons() {
             const hasItems = currentOrder.items.length > 0;
             const hasCustomerName = currentOrder.customerName.trim() !== '';
@@ -2786,9 +3177,7 @@ Es Teh Manis,8000</pre>
             }
         }
         
-        // Function to generate invoice automatically
         function generateInvoice() {
-            // Check if customer name and date are filled
             if (!currentOrder.customerName.trim()) {
                 showAlert('Harap isi nama pemesan terlebih dahulu!', 'danger');
                 document.getElementById('customerName').focus();
@@ -2806,7 +3195,6 @@ Es Teh Manis,8000</pre>
                 return;
             }
             
-            // Format date
             const date = new Date(currentOrder.reservationDate);
             const formattedDate = date.toLocaleDateString('id-ID', {
                 weekday: 'long',
@@ -2815,16 +3203,13 @@ Es Teh Manis,8000</pre>
                 day: 'numeric'
             });
             
-            // Calculate DP
             const dpAmount = calculateDP(currentOrder.total);
             
-            // Generate invoice text
             let invoiceText = "Berikut rekapan pesanannya:\n\n";
             invoiceText += `Nama : ${currentOrder.customerName}\n`;
             invoiceText += `Tanggal Reservasi : ${formattedDate}\n\n`;
             invoiceText += "Pesanan:\n";
             
-            // Format setiap item
             currentOrder.items.forEach((item) => {
                 const qty = item.quantity.toString().padStart(2);
                 let nameWithNotes = item.name;
@@ -2844,9 +3229,7 @@ Es Teh Manis,8000</pre>
             return invoiceText;
         }
         
-        // Function to generate list pesanan
         function generateListPesanan(reservation) {
-            // Format date (tanpa hari)
             const date = new Date(reservation.reservationDate);
             const formattedDate = date.toLocaleDateString('id-ID', {
                 year: 'numeric',
@@ -2854,12 +3237,10 @@ Es Teh Manis,8000</pre>
                 day: 'numeric'
             });
             
-            // Generate list pesanan text
             let listText = "PESANAN RESERVASI\n\n";
             listText += `Nama : ${reservation.customerName}\n`;
             listText += `Tanggal Reservasi : ${formattedDate}\n\n`;
             
-            // Format setiap item (tanpa harga)
             reservation.items.forEach((item) => {
                 const qty = item.quantity.toString().padStart(2);
                 let nameWithNotes = item.name;
@@ -2877,27 +3258,22 @@ Es Teh Manis,8000</pre>
             return listText;
         }
         
-        // Function to copy invoice to clipboard
         function copyInvoiceToClipboard() {
             const invoiceText = document.getElementById('invoiceOutput').textContent;
             copyTextToClipboard(invoiceText, 'Invoice berhasil disalin ke clipboard!');
         }
         
-        // Function to copy modal invoice to clipboard
         function copyModalInvoiceToClipboard() {
             const invoiceText = document.getElementById('modalInvoiceContent').textContent;
             copyTextToClipboard(invoiceText, 'Invoice berhasil disalin ke clipboard!');
         }
         
-        // Function to copy modal list pesanan to clipboard
         function copyModalListPesananToClipboard() {
             const listText = document.getElementById('modalListPesananContent').textContent;
             copyTextToClipboard(listText, 'List pesanan berhasil disalin ke clipboard!');
         }
         
-        // Generic function to copy text to clipboard
         function copyTextToClipboard(text, successMessage) {
-            // Use the Clipboard API if available
             if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard.writeText(text)
                     .then(() => {
@@ -2912,7 +3288,6 @@ Es Teh Manis,8000</pre>
             }
         }
         
-        // Fallback method for copying to clipboard
         function fallbackCopyToClipboard(text, successMessage) {
             const textArea = document.createElement("textarea");
             textArea.value = text;
@@ -2934,21 +3309,17 @@ Es Teh Manis,8000</pre>
             document.body.removeChild(textArea);
         }
         
-        // Function to load and display reservations from Firebase (with search filter)
         function loadReservations() {
             const today = new Date().toISOString().split('T')[0];
             const activeContainer = document.getElementById('activeReservationsContainer');
             const pastContainer = document.getElementById('pastReservationsContainer');
             
-            // Get search values
             const searchActive = document.getElementById('searchActiveReservations')?.value.toLowerCase() || '';
             const searchPast = document.getElementById('searchPastReservations')?.value.toLowerCase() || '';
             
-            // Filter by date
             let activeReservations = reservations.filter(r => r.reservationDate >= today);
             let pastReservations = reservations.filter(r => r.reservationDate < today);
             
-            // Apply search filter
             if (searchActive) {
                 activeReservations = activeReservations.filter(r => r.customerName.toLowerCase().includes(searchActive));
             }
@@ -2956,7 +3327,6 @@ Es Teh Manis,8000</pre>
                 pastReservations = pastReservations.filter(r => r.customerName.toLowerCase().includes(searchPast));
             }
             
-            // Sort reservations by date
             const sortedActiveReservations = [...activeReservations].sort((a, b) => 
                 new Date(a.reservationDate) - new Date(b.reservationDate)
             );
@@ -2965,7 +3335,6 @@ Es Teh Manis,8000</pre>
                 new Date(b.reservationDate) - new Date(a.reservationDate)
             );
             
-            // Display active reservations
             if (sortedActiveReservations.length === 0) {
                 activeContainer.innerHTML = `
                     <div class="empty-state">
@@ -3002,7 +3371,6 @@ Es Teh Manis,8000</pre>
                 `).join('');
             }
             
-            // Display past reservations
             if (sortedPastReservations.length === 0) {
                 pastContainer.innerHTML = `
                     <div class="empty-state">
@@ -3036,11 +3404,9 @@ Es Teh Manis,8000</pre>
                 `).join('');
             }
             
-            // Update counts (original, not filtered)
             updateReservationCounts();
         }
         
-        // Function to save order to Firebase
         function saveOrder() {
             if (!isOnline) {
                 showAlert('Anda sedang offline. Tidak dapat menyimpan ke Firebase.', 'danger');
@@ -3052,7 +3418,6 @@ Es Teh Manis,8000</pre>
                 return;
             }
             
-            // Check if data is complete
             if (!currentOrder.customerName.trim()) {
                 showAlert('Harap isi nama pemesan terlebih dahulu!', 'danger');
                 document.getElementById('customerName').focus();
@@ -3070,14 +3435,11 @@ Es Teh Manis,8000</pre>
                 return;
             }
             
-            // Generate invoice
             const invoiceText = generateInvoice();
             
-            // Display invoice in the UI
             document.getElementById('invoiceOutput').textContent = invoiceText;
             document.getElementById('invoiceSection').style.display = 'block';
             
-            // Create reservation object
             const reservation = {
                 customerName: currentOrder.customerName,
                 reservationDate: currentOrder.reservationDate,
@@ -3087,17 +3449,11 @@ Es Teh Manis,8000</pre>
                 invoice: invoiceText
             };
             
-            // Check if we're updating an existing reservation
             if (currentOrder.id) {
-                // Update existing reservation in Firebase
                 db.collection('reservations').doc(currentOrder.id).update(reservation)
                     .then(() => {
                         showAlert('Pesanan berhasil diupdate di Firebase!', 'success');
-                        
-                        // Switch to reservations tab
                         document.querySelector('[data-tab="reservations"]').click();
-                        
-                        // Clear current order
                         clearOrderWithoutConfirm();
                     })
                     .catch((error) => {
@@ -3105,15 +3461,10 @@ Es Teh Manis,8000</pre>
                         showAlert('Gagal mengupdate pesanan di Firebase', 'danger');
                     });
             } else {
-                // Add new reservation to Firebase
                 db.collection('reservations').add(reservation)
                     .then(() => {
                         showAlert('Pesanan berhasil disimpan ke Firebase!', 'success');
-                        
-                        // Switch to reservations tab
                         document.querySelector('[data-tab="reservations"]').click();
-                        
-                        // Clear current order
                         clearOrderWithoutConfirm();
                     })
                     .catch((error) => {
@@ -3123,7 +3474,6 @@ Es Teh Manis,8000</pre>
             }
         }
         
-        // Function to clear current order tanpa konfirmasi
         function clearOrderWithoutConfirm() {
             currentOrder = {
                 id: null,
@@ -3133,20 +3483,17 @@ Es Teh Manis,8000</pre>
                 total: 0
             };
             
-            // Clear form fields
             document.getElementById('customerName').value = '';
             document.getElementById('reservationDate').value = '';
             document.getElementById('searchMenuOrder').value = '';
             document.getElementById('itemQuantityOrder').value = 1;
             document.getElementById('itemNotesOrder').value = '';
             
-            // Update UI
             loadOrderItems();
             document.getElementById('invoiceSection').style.display = 'none';
             updateOrderActionButtons();
         }
         
-        // Function to clear current order (with confirmation)
         function clearOrder() {
             if (currentOrder.items.length > 0 && !confirm('Apakah Anda yakin ingin menghapus pesanan ini?')) {
                 return;
@@ -3156,75 +3503,59 @@ Es Teh Manis,8000</pre>
             showAlert('Pesanan berhasil dihapus!', 'success');
         }
         
-        // Function to view reservation invoice in modal
         function viewReservationInvoice(id) {
             const reservation = reservations.find(r => r.id === id);
             if (!reservation) return;
             
-            // Display invoice in modal
             document.getElementById('modalInvoiceContent').textContent = reservation.invoice;
             document.getElementById('invoiceModal').style.display = 'flex';
             
-            // Set up copy button
             document.getElementById('copyModalInvoiceBtn').onclick = function() {
                 copyModalInvoiceToClipboard();
             };
         }
         
-        // Function to view list pesanan in modal
         function viewListPesanan(id) {
             const reservation = reservations.find(r => r.id === id);
             if (!reservation) return;
             
-            // Generate list pesanan
             const listText = generateListPesanan(reservation);
             
-            // Display list in modal
             document.getElementById('modalListPesananContent').textContent = listText;
             document.getElementById('listPesananModal').style.display = 'flex';
             
-            // Set up copy button
             document.getElementById('copyModalListPesananBtn').onclick = function() {
                 copyModalListPesananToClipboard();
             };
         }
         
-        // Function to edit a reservation from Firebase
         function editReservation(id) {
             const reservation = reservations.find(r => r.id === id);
             if (!reservation) return;
             
-            // Set current order to reservation data
             currentOrder = {
                 id: reservation.id,
                 customerName: reservation.customerName,
                 reservationDate: reservation.reservationDate,
-                items: reservation.items.map(item => ({...item})), // Deep copy
+                items: reservation.items.map(item => ({...item})),
                 total: reservation.total
             };
             
-            // Update form fields
             document.getElementById('customerName').value = currentOrder.customerName;
             document.getElementById('reservationDate').value = currentOrder.reservationDate;
             
-            // Update UI
             loadOrderItems();
             
-            // Generate and display invoice
             const invoiceText = generateInvoice();
             document.getElementById('invoiceOutput').textContent = invoiceText;
             document.getElementById('invoiceSection').style.display = 'block';
             
-            // Switch to order tab
             document.querySelector('[data-tab="order"]').click();
-            
-            // Scroll to top
             document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
             
             showAlert('Pesanan siap diedit. Lakukan perubahan lalu klik "Update Pesanan di Firebase".', 'info');
         }
         
-        // Function to delete a reservation from Firebase
         function deleteReservation(id) {
             if (!isOnline) {
                 showAlert('Anda sedang offline. Tidak dapat menghapus dari Firebase.', 'danger');
@@ -3251,8 +3582,6 @@ Es Teh Manis,8000</pre>
         }
         
         // ============ TAKEAWAY FUNCTIONS ============
-        
-        // Function to add an item to takeaway
         function addItemToTakeaway() {
             const searchInput = document.getElementById('searchMenuTakeaway');
             const quantityInput = document.getElementById('itemQuantityTakeaway');
@@ -3267,7 +3596,6 @@ Es Teh Manis,8000</pre>
                 return;
             }
             
-            // Find the menu item by name
             const menuItem = menuItems.find(item => 
                 item.name.toLowerCase() === menuName.toLowerCase()
             );
@@ -3277,33 +3605,27 @@ Es Teh Manis,8000</pre>
                 return;
             }
             
-            // Check if item already exists in takeaway
             const existingItemIndex = currentTakeaway.items.findIndex(item => item.id === menuItem.id && item.notes === notes);
             
             if (existingItemIndex !== -1) {
-                // Update quantity for item with same notes
                 currentTakeaway.items[existingItemIndex].quantity += quantity;
                 currentTakeaway.items[existingItemIndex].subtotal = 
                     currentTakeaway.items[existingItemIndex].quantity * currentTakeaway.items[existingItemIndex].price;
             } else {
-                // Add new item
                 currentTakeaway.items.push({
                     id: menuItem.id,
                     name: menuItem.name,
                     price: menuItem.price,
                     quantity: quantity,
                     notes: notes,
-                    subtotal: menuItem.price * quantity
+                    subtotal: menuItem.price * quantity,
+                    categories: menuItem.categories || []
                 });
             }
             
-            // Update total
             updateTakeawayTotal();
-            
-            // Update UI
             loadTakeawayItems();
             
-            // Reset form
             searchInput.value = '';
             document.getElementById('autocompleteListTakeaway').style.display = 'none';
             quantityInput.value = 1;
@@ -3313,7 +3635,6 @@ Es Teh Manis,8000</pre>
             showAlert('Item berhasil ditambahkan ke pesanan takeaway!', 'success');
         }
         
-        // Function to load and display takeaway items
         function loadTakeawayItems() {
             const container = document.getElementById('takeawayItemsContainer');
             const takeawayItemsCount = document.getElementById('takeawayItemsCount');
@@ -3362,7 +3683,6 @@ Es Teh Manis,8000</pre>
             takeawayItemsCount.textContent = currentTakeaway.items.length;
         }
         
-        // Function to change takeaway item quantity
         function changeTakeawayItemQuantity(index, change) {
             const newQuantity = currentTakeaway.items[index].quantity + change;
             
@@ -3378,13 +3698,12 @@ Es Teh Manis,8000</pre>
             loadTakeawayItems();
         }
         
-        // Function to update takeaway item quantity from input
         function updateTakeawayItemQuantity(index, newQuantity) {
             newQuantity = parseInt(newQuantity);
             
             if (isNaN(newQuantity) || newQuantity < 1) {
                 showAlert('Jumlah harus minimal 1!', 'danger');
-                loadTakeawayItems(); // Reset to original value
+                loadTakeawayItems();
                 return;
             }
             
@@ -3395,28 +3714,22 @@ Es Teh Manis,8000</pre>
             loadTakeawayItems();
         }
         
-        // Function to edit takeaway item
         function editTakeawayItem(index) {
             const item = currentTakeaway.items[index];
             
-            // Populate modal with item data
             document.getElementById('editItemMenu').value = item.name;
             document.getElementById('editItemQuantity').value = item.quantity;
             document.getElementById('editItemNotes').value = item.notes || '';
             document.getElementById('editItemPrice').textContent = `Rp ${item.price.toLocaleString('id-ID')}`;
             document.getElementById('editItemIndex').value = index;
             
-            // Set modal type untuk takeaway
             document.getElementById('editItemModal').setAttribute('data-type', 'takeaway');
             
-            // Calculate and display subtotal
             updateEditItemSubtotal();
             
-            // Show modal
             document.getElementById('editItemModal').style.display = 'flex';
         }
         
-        // Function to remove an item from takeaway
         function removeTakeawayItem(index) {
             if (!confirm('Apakah Anda yakin ingin menghapus item ini dari pesanan takeaway?')) {
                 return;
@@ -3428,14 +3741,12 @@ Es Teh Manis,8000</pre>
             showAlert('Item berhasil dihapus dari pesanan takeaway!', 'success');
         }
         
-        // Function to update takeaway total
         function updateTakeawayTotal() {
             currentTakeaway.total = currentTakeaway.items.reduce((sum, item) => sum + item.subtotal, 0);
             document.getElementById('takeawayTotal').textContent = currentTakeaway.total.toLocaleString('id-ID');
             updateTakeawayActionButtons();
         }
         
-        // Function to update takeaway action buttons state
         function updateTakeawayActionButtons() {
             const hasItems = currentTakeaway.items.length > 0;
             
@@ -3448,7 +3759,6 @@ Es Teh Manis,8000</pre>
             }
         }
         
-        // Function to generate takeaway invoice
         function generateTakeawayInvoice() {
             if (currentTakeaway.items.length === 0) {
                 showAlert('Tidak ada item dalam pesanan takeaway!', 'danger');
@@ -3468,7 +3778,6 @@ Es Teh Manis,8000</pre>
                 minute: '2-digit'
             });
             
-            // Generate invoice text
             let invoiceText = "Berikut rekapan pesanan takeaway:\n\n";
             
             if (currentTakeaway.customerName.trim()) {
@@ -3479,7 +3788,6 @@ Es Teh Manis,8000</pre>
             invoiceText += `Waktu : ${formattedTime}\n\n`;
             invoiceText += "Pesanan:\n";
             
-            // Format setiap item
             currentTakeaway.items.forEach((item) => {
                 const qty = item.quantity.toString().padStart(2);
                 let nameWithNotes = item.name;
@@ -3497,7 +3805,6 @@ Es Teh Manis,8000</pre>
             return invoiceText;
         }
         
-        // Function to save takeaway order to Firebase
         function saveTakeaway() {
             if (!isOnline) {
                 showAlert('Anda sedang offline. Tidak dapat menyimpan ke Firebase.', 'danger');
@@ -3514,10 +3821,8 @@ Es Teh Manis,8000</pre>
                 return;
             }
             
-            // Generate invoice
             const invoiceText = generateTakeawayInvoice();
             
-            // Create takeaway object
             const takeaway = {
                 customerName: currentTakeaway.customerName || 'Tidak ada nama',
                 orderDate: new Date().toISOString(),
@@ -3526,17 +3831,11 @@ Es Teh Manis,8000</pre>
                 invoice: invoiceText
             };
             
-            // Check if we're updating an existing takeaway
             if (currentTakeaway.id) {
-                // Update existing takeaway in Firebase
                 db.collection('takeaway').doc(currentTakeaway.id).update(takeaway)
                     .then(() => {
                         showAlert('Pesanan takeaway berhasil diupdate di Firebase!', 'success');
-                        
-                        // Switch to takeaway list tab
                         document.querySelector('[data-tab="list-takeaway"]').click();
-                        
-                        // Clear current takeaway
                         clearTakeawayWithoutConfirm();
                     })
                     .catch((error) => {
@@ -3544,15 +3843,10 @@ Es Teh Manis,8000</pre>
                         showAlert('Gagal mengupdate pesanan takeaway di Firebase', 'danger');
                     });
             } else {
-                // Add new takeaway to Firebase
                 db.collection('takeaway').add(takeaway)
                     .then(() => {
                         showAlert('Pesanan takeaway berhasil disimpan ke Firebase!', 'success');
-                        
-                        // Switch to takeaway list tab
                         document.querySelector('[data-tab="list-takeaway"]').click();
-                        
-                        // Clear current takeaway
                         clearTakeawayWithoutConfirm();
                     })
                     .catch((error) => {
@@ -3562,7 +3856,6 @@ Es Teh Manis,8000</pre>
             }
         }
         
-        // Function to clear current takeaway tanpa konfirmasi
         function clearTakeawayWithoutConfirm() {
             currentTakeaway = {
                 id: null,
@@ -3571,31 +3864,25 @@ Es Teh Manis,8000</pre>
                 total: 0
             };
             
-            // Clear form fields
             document.getElementById('customerNameTakeaway').value = '';
             document.getElementById('searchMenuTakeaway').value = '';
             document.getElementById('itemQuantityTakeaway').value = 1;
             document.getElementById('itemNotesTakeaway').value = '';
             
-            // Update UI
             loadTakeawayItems();
             updateTakeawayActionButtons();
         }
         
-        // Function to load and display takeaway list from Firebase (with search filter)
         function loadTakeawayList() {
             const container = document.getElementById('takeawayListContainer');
             
-            // Get search value
             const search = document.getElementById('searchTakeaway')?.value.toLowerCase() || '';
             
-            // Filter by search
             let filtered = takeawayOrders;
             if (search) {
                 filtered = filtered.filter(o => o.customerName.toLowerCase().includes(search));
             }
             
-            // Sort takeaway orders by date (newest first)
             const sortedTakeawayOrders = [...filtered].sort((a, b) => 
                 new Date(b.orderDate) - new Date(a.orderDate)
             );
@@ -3646,54 +3933,42 @@ Es Teh Manis,8000</pre>
                 `;
             }).join('');
             
-            // Update count (original, not filtered)
             updateTakeawayListCount();
         }
         
-        // Function to view takeaway invoice in modal
         function viewTakeawayInvoice(id) {
             const takeaway = takeawayOrders.find(t => t.id === id);
             if (!takeaway) return;
             
-            // Display invoice in modal
             document.getElementById('modalInvoiceContent').textContent = takeaway.invoice;
             document.getElementById('invoiceModal').style.display = 'flex';
             
-            // Set up copy button
             document.getElementById('copyModalInvoiceBtn').onclick = function() {
                 copyModalInvoiceToClipboard();
             };
         }
         
-        // Function to edit a takeaway order from Firebase
         function editTakeawayOrder(id) {
             const takeaway = takeawayOrders.find(t => t.id === id);
             if (!takeaway) return;
             
-            // Set current takeaway to order data
             currentTakeaway = {
                 id: takeaway.id,
                 customerName: takeaway.customerName,
-                items: takeaway.items.map(item => ({...item})), // Deep copy
+                items: takeaway.items.map(item => ({...item})),
                 total: takeaway.total
             };
             
-            // Update form fields
             document.getElementById('customerNameTakeaway').value = currentTakeaway.customerName;
             
-            // Update UI
             loadTakeawayItems();
             
-            // Switch to takeaway tab
             document.querySelector('[data-tab="takeaway"]').click();
-            
-            // Scroll to top
             document.getElementById('takeaway').scrollIntoView({ behavior: 'smooth' });
             
             showAlert('Pesanan takeaway siap diedit. Lakukan perubahan lalu klik "Update Pesanan Takeaway di Firebase".', 'info');
         }
         
-        // Function to delete a takeaway order from Firebase
         function deleteTakeawayOrder(id) {
             if (!isOnline) {
                 showAlert('Anda sedang offline. Tidak dapat menghapus dari Firebase.', 'danger');
@@ -3719,7 +3994,7 @@ Es Teh Manis,8000</pre>
                 });
         }
         
-        // ============ NEW: LAPORAN HARIAN ============
+        // ============ LAPORAN HARIAN (dengan kategori) ============
         function generateDailyReport() {
             const reportDate = document.getElementById('reportDate').value;
             const sortBy = document.getElementById('reportSort').value;
@@ -3742,8 +4017,11 @@ Es Teh Manis,8000</pre>
                 return;
             }
             
-            // Agregasi per menu
+            // Agregasi per menu (untuk tabel detail)
             const menuTotals = {};
+            // Agregasi per kategori
+            const categoryTotals = {}; // { kategoriId: { name, totalPorsi, items: { menuName: total } } }
+            
             reservationsOnDate.forEach(res => {
                 res.items.forEach(item => {
                     const menuName = item.name;
@@ -3751,30 +4029,77 @@ Es Teh Manis,8000</pre>
                         menuTotals[menuName] = 0;
                     }
                     menuTotals[menuName] += item.quantity;
+                    
+                    // Kategori
+                    if (item.categories && item.categories.length > 0) {
+                        item.categories.forEach(cat => {
+                            if (!categoryTotals[cat.id]) {
+                                categoryTotals[cat.id] = {
+                                    name: cat.name,
+                                    total: 0,
+                                    items: {}
+                                };
+                            }
+                            if (!categoryTotals[cat.id].items[menuName]) {
+                                categoryTotals[cat.id].items[menuName] = 0;
+                            }
+                            categoryTotals[cat.id].items[menuName] += item.quantity;
+                            categoryTotals[cat.id].total += item.quantity;
+                        });
+                    }
                 });
             });
             
-            // Ubah ke array untuk diurutkan
+            // Ubah ke array untuk diurutkan (menu)
             let reportData = Object.keys(menuTotals).map(menu => ({
                 menu: menu,
                 total: menuTotals[menu]
             }));
             
-            // Urutkan berdasarkan pilihan
             if (sortBy === 'most') {
                 reportData.sort((a, b) => b.total - a.total);
             } else if (sortBy === 'least') {
                 reportData.sort((a, b) => a.total - b.total);
-            } else { // alpha
+            } else {
                 reportData.sort((a, b) => a.menu.localeCompare(b.menu));
             }
             
-            // Hitung total keseluruhan porsi
             const grandTotal = reportData.reduce((sum, item) => sum + item.total, 0);
             
-            // Buat tabel HTML
-            let html = `
-                <h3 style="margin-bottom: 15px;">Laporan Tanggal ${new Date(reportDate).toLocaleDateString('id-ID')}</h3>
+            // Susun HTML
+            let html = `<h3 style="margin-bottom: 15px;">Laporan Tanggal ${new Date(reportDate).toLocaleDateString('id-ID')}</h3>`;
+            
+            // Bagian Kategori
+            if (Object.keys(categoryTotals).length > 0) {
+                html += `<h4 style="margin-top: 20px; margin-bottom: 10px;">Per Kategori</h4>`;
+                // Urutkan kategori berdasarkan nama
+                const sortedCategories = Object.values(categoryTotals).sort((a, b) => a.name.localeCompare(b.name));
+                sortedCategories.forEach(cat => {
+                    html += `
+                        <div class="category-card">
+                            <div class="category-title">${cat.name}</div>
+                            <div class="category-total">Total: ${cat.total} porsi</div>
+                            <div class="category-items">
+                    `;
+                    // Item dalam kategori, urutkan berdasarkan nama
+                    const items = Object.keys(cat.items).sort();
+                    items.forEach(menu => {
+                        html += `
+                            <div class="category-item-detail">
+                                <span class="category-item-name">${menu}</span>
+                                <span class="category-item-qty">${cat.items[menu]}</span>
+                            </div>
+                        `;
+                    });
+                    html += `</div></div>`;
+                });
+            } else {
+                html += `<p>Tidak ada kategori untuk pesanan hari ini.</p>`;
+            }
+            
+            // Tabel detail per menu
+            html += `
+                <h4 style="margin-top: 30px;">Detail Per Menu</h4>
                 <table class="report-table">
                     <thead>
                         <tr>
@@ -3822,7 +4147,6 @@ Es Teh Manis,8000</pre>
             
             alertContainer.appendChild(alertDiv);
             
-            // Remove alert after 3 seconds
             setTimeout(() => {
                 alertDiv.style.opacity = '0';
                 alertDiv.style.transition = 'opacity 0.5s';
