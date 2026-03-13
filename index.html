@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* ... (semua style sebelumnya tetap, ditambah beberapa style baru untuk kategori) ... */
+        /* ... (semua style sebelumnya tetap, ditambah sedikit untuk modal atur menu) ... */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -1178,7 +1178,7 @@ Es Teh Manis,8000</pre>
                     <input type="number" id="menuPrice" class="form-control" placeholder="Contoh: 25000">
                 </div>
                 
-                <!-- NEW: Kategori -->
+                <!-- Kategori -->
                 <div class="form-group">
                     <label>Kategori (bisa pilih lebih dari satu):</label>
                     <div id="menuCategoriesContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
@@ -1200,7 +1200,7 @@ Es Teh Manis,8000</pre>
             </div>
         </div>
         
-        <!-- NEW: Tab Kategori -->
+        <!-- Tab Kategori -->
         <div id="categories" class="tab-content">
             <h2 style="margin-bottom: 20px; color: #2c3e50;">Manajemen Kategori</h2>
             
@@ -1468,6 +1468,31 @@ Es Teh Manis,8000</pre>
             </div>
         </div>
         
+        <!-- NEW: Modal untuk Atur Menu per Kategori -->
+        <div id="categoryMenuModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="modal-title" id="categoryMenuModalTitle">Atur Menu untuk Kategori</div>
+                    <button class="modal-close" id="closeCategoryMenuModal">&times;</button>
+                </div>
+                <div id="categoryMenuForm">
+                    <p>Pilih menu yang ingin dimasukkan ke kategori ini:</p>
+                    <div id="categoryMenuList" style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px; margin-bottom: 15px;">
+                        <!-- Daftar menu dengan checkbox akan diisi lewat JavaScript -->
+                    </div>
+                    <input type="hidden" id="currentCategoryId">
+                    <div class="btn-group">
+                        <button id="saveCategoryMenuBtn" class="btn btn-success">
+                            <i class="fas fa-save"></i> Simpan
+                        </button>
+                        <button id="cancelCategoryMenuBtn" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Batal
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <!-- Modal untuk Edit Item Pesanan -->
         <div id="editItemModal" class="modal">
             <div class="modal-content">
@@ -1537,7 +1562,7 @@ Es Teh Manis,8000</pre>
                         <input type="number" id="editMenuPrice" class="form-control" placeholder="Harga menu">
                     </div>
                     
-                    <!-- NEW: Kategori di modal edit -->
+                    <!-- Kategori di modal edit -->
                     <div class="form-group">
                         <label>Kategori (bisa pilih lebih dari satu):</label>
                         <div id="editMenuCategoriesContainer" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 8px; padding: 10px;">
@@ -1593,7 +1618,7 @@ Es Teh Manis,8000</pre>
     <script>
         // ============ FIREBASE CONFIGURATION ============
         // GANTI DENGAN KONFIGURASI FIREBASE ANDA!
-        const firebaseConfig = {
+       const firebaseConfig = {
 
   apiKey: "AIzaSyDyVwsEo3QuL0RfnCDhBdUw5Fp3VgJiy6c",
 
@@ -2061,7 +2086,7 @@ Es Teh Manis,8000</pre>
                 document.getElementById('editMenuModal').style.display = 'none';
             });
             
-            // NEW: Event listener for close edit category modal
+            // Event listener for close edit category modal
             document.getElementById('closeEditCategoryModal').addEventListener('click', function() {
                 document.getElementById('editCategoryModal').style.display = 'none';
             });
@@ -2071,6 +2096,17 @@ Es Teh Manis,8000</pre>
             });
             
             document.getElementById('updateCategoryBtn').addEventListener('click', updateCategory);
+            
+            // NEW: Event listeners untuk modal atur menu kategori
+            document.getElementById('closeCategoryMenuModal').addEventListener('click', function() {
+                document.getElementById('categoryMenuModal').style.display = 'none';
+            });
+            
+            document.getElementById('cancelCategoryMenuBtn').addEventListener('click', function() {
+                document.getElementById('categoryMenuModal').style.display = 'none';
+            });
+            
+            document.getElementById('saveCategoryMenuBtn').addEventListener('click', saveCategoryMenus);
             
             // Close modal when clicking outside
             document.getElementById('invoiceModal').addEventListener('click', function(e) {
@@ -2098,6 +2134,12 @@ Es Teh Manis,8000</pre>
             });
             
             document.getElementById('editCategoryModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('categoryMenuModal').addEventListener('click', function(e) {
                 if (e.target === this) {
                     this.style.display = 'none';
                 }
@@ -2274,7 +2316,7 @@ Es Teh Manis,8000</pre>
                 });
         }
         
-        // NEW: Function to render category checkboxes in add/edit menu form
+        // Function to render category checkboxes in add/edit menu form
         function renderCategoryCheckboxes() {
             const container = document.getElementById('menuCategoriesContainer');
             const editContainer = document.getElementById('editMenuCategoriesContainer');
@@ -2297,7 +2339,7 @@ Es Teh Manis,8000</pre>
             if (editContainer) editContainer.innerHTML = html || '<p>Belum ada kategori.</p>';
         }
         
-        // NEW: Get selected categories from checkboxes
+        // Get selected categories from checkboxes
         function getSelectedCategories(containerId) {
             const checkboxes = document.querySelectorAll(`#${containerId} input[type="checkbox"]:checked`);
             return Array.from(checkboxes).map(cb => ({
@@ -2306,7 +2348,7 @@ Es Teh Manis,8000</pre>
             }));
         }
         
-        // NEW: Set checkboxes based on menu's categories
+        // Set checkboxes based on menu's categories
         function setSelectedCategories(containerId, categoryIds) {
             const checkboxes = document.querySelectorAll(`#${containerId} input[type="checkbox"]`);
             checkboxes.forEach(cb => {
@@ -2384,7 +2426,7 @@ Es Teh Manis,8000</pre>
             nameInput.focus();
         }
         
-        // NEW: Add category
+        // Add category
         function addCategory() {
             if (!isOnline) {
                 showAlert('Anda sedang offline. Tidak dapat menambah kategori ke Firebase.', 'danger');
@@ -2425,7 +2467,7 @@ Es Teh Manis,8000</pre>
             });
         }
         
-        // NEW: Load and display categories
+        // Load and display categories (dengan tombol atur menu)
         function loadCategories() {
             const container = document.getElementById('categoriesListContainer');
             if (!container) return;
@@ -2446,6 +2488,9 @@ Es Teh Manis,8000</pre>
                 <div class="category-item">
                     <span class="category-name">${cat.name}</span>
                     <div class="menu-actions">
+                        <button class="btn btn-sm btn-info" onclick="openCategoryMenuModal('${cat.id}', '${cat.name}')">
+                            <i class="fas fa-list"></i> Atur Menu
+                        </button>
                         <button class="btn btn-sm btn-warning" onclick="editCategory('${cat.id}')">
                             <i class="fas fa-edit"></i>
                         </button>
@@ -2457,7 +2502,100 @@ Es Teh Manis,8000</pre>
             `).join('');
         }
         
-        // NEW: Edit category
+        // Open modal untuk atur menu per kategori
+        function openCategoryMenuModal(categoryId, categoryName) {
+            document.getElementById('currentCategoryId').value = categoryId;
+            document.getElementById('categoryMenuModalTitle').textContent = `Atur Menu untuk Kategori: ${categoryName}`;
+            
+            // Buat daftar menu dengan checkbox
+            const menuListContainer = document.getElementById('categoryMenuList');
+            if (menuItems.length === 0) {
+                menuListContainer.innerHTML = '<p>Belum ada menu. Tambahkan menu terlebih dahulu.</p>';
+            } else {
+                // Cari tahu menu mana yang sudah memiliki kategori ini
+                const menuInCategory = menuItems.filter(item => 
+                    item.categories && item.categories.some(c => c.id === categoryId)
+                ).map(item => item.id);
+                
+                let html = '';
+                menuItems.sort((a, b) => a.name.localeCompare(b.name)).forEach(menu => {
+                    const checked = menuInCategory.includes(menu.id) ? 'checked' : '';
+                    html += `
+                        <div style="margin-bottom: 8px;">
+                            <label>
+                                <input type="checkbox" class="menu-checkbox" value="${menu.id}" data-menu-name="${menu.name}" ${checked}>
+                                ${menu.name} - Rp ${menu.price.toLocaleString('id-ID')}
+                            </label>
+                        </div>
+                    `;
+                });
+                menuListContainer.innerHTML = html;
+            }
+            
+            document.getElementById('categoryMenuModal').style.display = 'flex';
+        }
+        
+        // Simpan perubahan menu untuk kategori tertentu
+        function saveCategoryMenus() {
+            if (!isOnline) {
+                showAlert('Anda sedang offline. Tidak dapat menyimpan perubahan.', 'danger');
+                return;
+            }
+            
+            const categoryId = document.getElementById('currentCategoryId').value;
+            const checkboxes = document.querySelectorAll('#categoryMenuList input[type="checkbox"]');
+            
+            // Kumpulkan id menu yang dicentang
+            const selectedMenuIds = [];
+            checkboxes.forEach(cb => {
+                if (cb.checked) selectedMenuIds.push(cb.value);
+            });
+            
+            // Kita perlu melakukan batch update pada setiap menu
+            const batch = db.batch();
+            
+            menuItems.forEach(menu => {
+                // Dapatkan kategori menu saat ini
+                let currentCategories = menu.categories ? [...menu.categories] : [];
+                
+                // Cek apakah menu ini harus memiliki kategori ini
+                const shouldHave = selectedMenuIds.includes(menu.id);
+                const hasNow = currentCategories.some(c => c.id === categoryId);
+                
+                if (shouldHave && !hasNow) {
+                    // Tambah kategori
+                    const category = categories.find(c => c.id === categoryId);
+                    if (category) {
+                        currentCategories.push({ id: category.id, name: category.name });
+                    }
+                } else if (!shouldHave && hasNow) {
+                    // Hapus kategori
+                    currentCategories = currentCategories.filter(c => c.id !== categoryId);
+                } else {
+                    return; // tidak ada perubahan
+                }
+                
+                // Update di batch
+                const menuRef = db.collection('menu').doc(menu.id);
+                batch.update(menuRef, { 
+                    categories: currentCategories,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            });
+            
+            // Commit batch
+            batch.commit()
+                .then(() => {
+                    showAlert('Kategori berhasil diatur pada menu!', 'success');
+                    document.getElementById('categoryMenuModal').style.display = 'none';
+                })
+                .catch((error) => {
+                    console.error('Error updating menu categories:', error);
+                    showAlert('Gagal menyimpan perubahan: ' + error.message, 'danger');
+                });
+        }
+        
+        // Edit category
         function editCategory(id) {
             const category = categories.find(c => c.id === id);
             if (!category) return;
@@ -2467,7 +2605,7 @@ Es Teh Manis,8000</pre>
             document.getElementById('editCategoryModal').style.display = 'flex';
         }
         
-        // NEW: Update category
+        // Update category
         function updateCategory() {
             if (!isOnline) {
                 showAlert('Anda sedang offline. Tidak dapat mengupdate kategori.', 'danger');
@@ -2489,7 +2627,22 @@ Es Teh Manis,8000</pre>
                 return;
             }
             
+            // Update nama kategori di collection categories
             db.collection('categories').doc(id).update({ name: newName })
+                .then(() => {
+                    // Update juga nama kategori di semua menu yang memiliki kategori ini
+                    const batch = db.batch();
+                    menuItems.forEach(menu => {
+                        if (menu.categories && menu.categories.some(c => c.id === id)) {
+                            const newCategories = menu.categories.map(c => 
+                                c.id === id ? { id: id, name: newName } : c
+                            );
+                            const menuRef = db.collection('menu').doc(menu.id);
+                            batch.update(menuRef, { categories: newCategories });
+                        }
+                    });
+                    return batch.commit();
+                })
                 .then(() => {
                     showAlert('Kategori berhasil diupdate!', 'success');
                     document.getElementById('editCategoryModal').style.display = 'none';
@@ -2500,7 +2653,7 @@ Es Teh Manis,8000</pre>
                 });
         }
         
-        // NEW: Delete category
+        // Delete category
         function deleteCategory(id) {
             if (!isOnline) {
                 showAlert('Anda sedang offline. Tidak dapat menghapus kategori.', 'danger');
@@ -4159,4 +4312,4 @@ Es Teh Manis,8000</pre>
         }
     </script>
 </body>
-    </html>
+            </html>
