@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* ... (semua style sebelumnya tetap, ditambah sedikit untuk modal atur menu) ... */
+        /* Semua CSS sama seperti sebelumnya, tidak ada perubahan */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -1468,7 +1468,7 @@ Es Teh Manis,8000</pre>
             </div>
         </div>
         
-        <!-- NEW: Modal untuk Atur Menu per Kategori -->
+        <!-- Modal untuk Atur Menu per Kategori -->
         <div id="categoryMenuModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -1618,7 +1618,7 @@ Es Teh Manis,8000</pre>
     <script>
         // ============ FIREBASE CONFIGURATION ============
         // GANTI DENGAN KONFIGURASI FIREBASE ANDA!
-       const firebaseConfig = {
+        const firebaseConfig = {
 
   apiKey: "AIzaSyDyVwsEo3QuL0RfnCDhBdUw5Fp3VgJiy6c",
 
@@ -1634,6 +1634,7 @@ Es Teh Manis,8000</pre>
 
 };
 
+        
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
@@ -2097,7 +2098,7 @@ Es Teh Manis,8000</pre>
             
             document.getElementById('updateCategoryBtn').addEventListener('click', updateCategory);
             
-            // NEW: Event listeners untuk modal atur menu kategori
+            // Event listeners untuk modal atur menu kategori
             document.getElementById('closeCategoryMenuModal').addEventListener('click', function() {
                 document.getElementById('categoryMenuModal').style.display = 'none';
             });
@@ -3086,7 +3087,6 @@ Es Teh Manis,8000</pre>
         }
         
         // ============ ORDER FUNCTIONS ============
-        // (Sama seperti sebelumnya, tidak berubah)
         function addItemToOrder() {
             const searchInput = document.getElementById('searchMenuOrder');
             const quantityInput = document.getElementById('itemQuantityOrder');
@@ -4147,7 +4147,7 @@ Es Teh Manis,8000</pre>
                 });
         }
         
-        // ============ LAPORAN HARIAN (dengan kategori) ============
+        // ============ LAPORAN HARIAN (dengan kategori menggunakan data menu terkini) ============
         function generateDailyReport() {
             const reportDate = document.getElementById('reportDate').value;
             const sortBy = document.getElementById('reportSort').value;
@@ -4157,7 +4157,6 @@ Es Teh Manis,8000</pre>
                 return;
             }
             
-            // Filter reservasi berdasarkan tanggal
             const reservationsOnDate = reservations.filter(r => r.reservationDate === reportDate);
             
             if (reservationsOnDate.length === 0) {
@@ -4170,9 +4169,13 @@ Es Teh Manis,8000</pre>
                 return;
             }
             
-            // Agregasi per menu (untuk tabel detail)
+            // Buat mapping nama menu ke data menu dari menuItems (untuk mendapatkan kategori terkini)
+            const menuMap = {};
+            menuItems.forEach(menu => {
+                menuMap[menu.name] = menu;
+            });
+            
             const menuTotals = {};
-            // Agregasi per kategori
             const categoryTotals = {}; // { kategoriId: { name, totalPorsi, items: { menuName: total } } }
             
             reservationsOnDate.forEach(res => {
@@ -4183,9 +4186,10 @@ Es Teh Manis,8000</pre>
                     }
                     menuTotals[menuName] += item.quantity;
                     
-                    // Kategori
-                    if (item.categories && item.categories.length > 0) {
-                        item.categories.forEach(cat => {
+                    // Dapatkan menu dari map (berdasarkan nama)
+                    const menu = menuMap[menuName];
+                    if (menu && menu.categories && menu.categories.length > 0) {
+                        menu.categories.forEach(cat => {
                             if (!categoryTotals[cat.id]) {
                                 categoryTotals[cat.id] = {
                                     name: cat.name,
@@ -4312,4 +4316,4 @@ Es Teh Manis,8000</pre>
         }
     </script>
 </body>
-            </html>
+    </html>
