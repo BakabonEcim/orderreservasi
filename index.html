@@ -1388,7 +1388,7 @@ Es Teh Manis,8000</pre>
             </div>
         </div>
         
-        <!-- Tab Buat Pesanan -->
+        <!-- Tab Buat Pesanan (dengan tombol hapus meja) -->
         <div id="order" class="tab-content">
             <h2 style="margin-bottom: 20px; color: #2c3e50;">Buat Pesanan Baru</h2>
             
@@ -1404,11 +1404,15 @@ Es Teh Manis,8000</pre>
                 </div>
             </div>
             
-            <div class="form-group">
+            <!-- MODIFIED: Tambah tombol hapus meja terpilih -->
+            <div class="form-group" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                 <button id="selectTableBtn" class="btn btn-info select-table-btn">
                     <i class="fas fa-chair"></i> Pilih Meja
                 </button>
-                <div id="selectedTablesDisplay" class="selected-tables" style="display: none;">
+                <button id="clearSelectedTablesBtn" class="btn btn-danger select-table-btn" style="display: none;">
+                    <i class="fas fa-trash"></i> Hapus Meja Terpilih
+                </button>
+                <div id="selectedTablesDisplay" class="selected-tables" style="display: none; flex: 1 1 100%; margin-top: 10px;">
                     Meja terpilih: <span id="selectedTablesList"></span>
                 </div>
             </div>
@@ -2471,6 +2475,17 @@ Es Teh Manis,8000</pre>
                 document.getElementById('selectTableModal').style.display = 'none';
             });
             document.getElementById('confirmSelectTableBtn').addEventListener('click', confirmSelectTables);
+            
+            // MODIFIED: Tombol hapus meja terpilih
+            document.getElementById('clearSelectedTablesBtn').addEventListener('click', function() {
+                if (currentOrder.tables && currentOrder.tables.length > 0) {
+                    if (confirm('Hapus semua meja terpilih?')) {
+                        currentOrder.tables = [];
+                        updateSelectedTablesDisplay();
+                        showAlert('Meja terpilih dihapus', 'success');
+                    }
+                }
+            });
             
             // DP modal
             document.getElementById('closeAddDpModal').addEventListener('click', () => {
@@ -3723,6 +3738,22 @@ Es Teh Manis,8000</pre>
             document.body.removeChild(textArea);
         }
         
+        // ============ FUNGSI UNTUK MENAMPILKAN MEJA TERPILIH ============
+        function updateSelectedTablesDisplay() {
+            const displayDiv = document.getElementById('selectedTablesDisplay');
+            const listSpan = document.getElementById('selectedTablesList');
+            const clearBtn = document.getElementById('clearSelectedTablesBtn');
+            
+            if (currentOrder.tables && currentOrder.tables.length > 0) {
+                listSpan.textContent = currentOrder.tables.join(', ');
+                displayDiv.style.display = 'block';
+                clearBtn.style.display = 'inline-block';
+            } else {
+                displayDiv.style.display = 'none';
+                clearBtn.style.display = 'none';
+            }
+        }
+        
         // ============ MODIFIED loadReservations dengan filter tanggal dan statistik ============
         function loadReservations(filterDate = null) {
             const today = new Date().toISOString().split('T')[0];
@@ -3833,6 +3864,7 @@ Es Teh Manis,8000</pre>
             updateStats(filterDate);
         }
         
+        // MODIFIED: perbaiki fungsi updateStats
         function updateStats(filterDate) {
             const withDpEl = document.getElementById('statsWithDp');
             const withoutDpEl = document.getElementById('statsWithoutDp');
@@ -3846,8 +3878,8 @@ Es Teh Manis,8000</pre>
                 targetReservations = reservations.filter(r => r.reservationDate >= today);
             }
             
-            const countWithDp = targetReservations.filter(r => r.dpAmount != null).length;
-            const countWithoutDp = targetReservations.filter(r => r.dpAmount == null).length;
+            const countWithDp = targetReservations.filter(r => r.dpAmount != null && r.dpAmount > 0).length;
+            const countWithoutDp = targetReservations.filter(r => r.dpAmount == null || r.dpAmount === 0).length;
             
             withDpEl.textContent = countWithDp;
             withoutDpEl.textContent = countWithoutDp;
@@ -4020,7 +4052,7 @@ Es Teh Manis,8000</pre>
             
             document.getElementById('customerName').value = '';
             document.getElementById('reservationDate').value = '';
-            document.getElementById('selectedTablesDisplay').style.display = 'none';
+            updateSelectedTablesDisplay(); // perbarui tampilan meja
             document.getElementById('searchMenuOrder').value = '';
             document.getElementById('itemQuantityOrder').value = 1;
             document.getElementById('itemNotesOrder').value = '';
@@ -4083,10 +4115,7 @@ Es Teh Manis,8000</pre>
             
             document.getElementById('customerName').value = currentOrder.customerName;
             document.getElementById('reservationDate').value = currentOrder.reservationDate;
-            if (currentOrder.tables.length > 0) {
-                document.getElementById('selectedTablesList').textContent = currentOrder.tables.join(', ');
-                document.getElementById('selectedTablesDisplay').style.display = 'block';
-            }
+            updateSelectedTablesDisplay(); // perbarui tampilan meja
             
             loadOrderItems();
             
@@ -4915,15 +4944,14 @@ Es Teh Manis,8000</pre>
                     card.classList.toggle('selected');
                 }
             });
+            
+            // Perbarui tampilan meja terpilih di form utama
+            updateSelectedTablesDisplay();
         };
         
         function confirmSelectTables() {
-            if (currentOrder.tables && currentOrder.tables.length > 0) {
-                document.getElementById('selectedTablesList').textContent = currentOrder.tables.join(', ');
-                document.getElementById('selectedTablesDisplay').style.display = 'block';
-            } else {
-                document.getElementById('selectedTablesDisplay').style.display = 'none';
-            }
+            // updateSelectedTablesDisplay sudah dipanggil di toggle, tapi untuk jaga-jaga
+            updateSelectedTablesDisplay();
             document.getElementById('selectTableModal').style.display = 'none';
         }
         
@@ -4980,8 +5008,7 @@ Es Teh Manis,8000</pre>
             currentOrder.reservationDate = date;
             currentOrder.tables = [tableNumber];
             document.getElementById('reservationDate').value = date;
-            document.getElementById('selectedTablesList').textContent = tableNumber;
-            document.getElementById('selectedTablesDisplay').style.display = 'block';
+            updateSelectedTablesDisplay();
             
             document.querySelector('[data-tab="order"]').click();
             showAlert('Silakan isi pesanan', 'info');
@@ -5040,4 +5067,4 @@ Es Teh Manis,8000</pre>
         }
     </script>
 </body>
-    </html>
+</html>
