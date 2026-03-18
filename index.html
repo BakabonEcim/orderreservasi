@@ -30,7 +30,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* Semua CSS sama seperti sebelumnya, ditambah beberapa style baru */
+        /* ... CSS tetap sama seperti sebelumnya ... */
         * {
             box-sizing: border-box;
             margin: 0;
@@ -182,7 +182,6 @@
             animation: fadeIn 0.5s ease;
         }
         
-        /* Login Container */
         .login-container {
             background-color: white;
             border-radius: 12px;
@@ -835,13 +834,11 @@
             100% { transform: scale(1); }
         }
         
-        /* PWA Mode */
         body.pwa-mode {
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
         }
         
-        /* Button kecil di samping jumlah */
         .add-to-order-container {
             display: flex;
             align-items: flex-end;
@@ -861,7 +858,6 @@
             width: auto;
         }
         
-        /* Gaya untuk laporan harian */
         .report-table {
             width: 100%;
             border-collapse: collapse;
@@ -893,7 +889,6 @@
             color: #2c3e50;
         }
         
-        /* Card kategori di laporan */
         .category-card {
             background-color: #f8f9fa;
             border-radius: 12px;
@@ -934,7 +929,6 @@
             font-weight: bold;
         }
         
-        /* Style untuk manajemen meja */
         .table-item {
             display: flex;
             justify-content: space-between;
@@ -968,7 +962,6 @@
             width: 150px;
         }
         
-        /* Grid meja */
         .tables-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
@@ -1029,7 +1022,6 @@
             font-weight: bold;
         }
         
-        /* Info DP di kartu reservasi */
         .dp-info {
             margin-top: 5px;
             font-size: 0.9rem;
@@ -1043,34 +1035,9 @@
             font-style: italic;
         }
         
-        /* Tombol pilih meja */
         .select-table-btn {
             margin-top: 10px;
             margin-bottom: 10px;
-        }
-        
-        /* Statistik cards */
-        .stats-cards {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            flex: 1;
-            background: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        .stat-card div:first-child {
-            font-size: 0.9rem;
-            color: #2c3e50;
-        }
-        .stat-card div:last-child {
-            font-size: 2rem;
-            font-weight: bold;
-            color: #2c3e50;
         }
         
         @media (max-width: 600px) {
@@ -1136,10 +1103,6 @@
                 position: static;
                 margin-top: 10px;
                 justify-content: center;
-            }
-            
-            .stats-cards {
-                flex-direction: column;
             }
         }
     </style>
@@ -1404,7 +1367,7 @@ Es Teh Manis,8000</pre>
                 </div>
             </div>
             
-            <!-- MODIFIED: Tambah tombol hapus meja terpilih -->
+            <!-- Tombol pilih meja dan hapus meja terpilih -->
             <div class="form-group" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
                 <button id="selectTableBtn" class="btn btn-info select-table-btn">
                     <i class="fas fa-chair"></i> Pilih Meja
@@ -1524,7 +1487,7 @@ Es Teh Manis,8000</pre>
             </div>
         </div>
         
-        <!-- Tab Reservasi Aktif (dengan filter tanggal dan statistik) -->
+        <!-- Tab Reservasi Aktif (tanpa statistik, dengan tombol X di search) -->
         <div id="reservations" class="tab-content">
             <h2 style="margin-bottom: 20px; color: #2c3e50;">Reservasi Aktif</h2>
             
@@ -1539,21 +1502,12 @@ Es Teh Manis,8000</pre>
                 </div>
             </div>
             
-            <!-- Statistik Cards -->
-            <div class="stats-cards">
-                <div class="stat-card" style="background: #d4edda;">
-                    <div>Reservasi dengan DP</div>
-                    <div id="statsWithDp">0</div>
-                </div>
-                <div class="stat-card" style="background: #f8d7da;">
-                    <div>Reservasi tanpa DP</div>
-                    <div id="statsWithoutDp">0</div>
-                </div>
-            </div>
-            
-            <!-- Search box for active reservations -->
-            <div class="form-group">
-                <input type="text" id="searchActiveReservations" class="form-control" placeholder="Cari berdasarkan nama...">
+            <!-- Search box for active reservations with clear button -->
+            <div class="form-group" style="position: relative;">
+                <input type="text" id="searchActiveReservations" class="form-control" placeholder="Cari berdasarkan nama..." style="padding-right: 40px;">
+                <button id="clearSearchActive" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; display: none; color: #999;">
+                    <i class="fas fa-times-circle"></i>
+                </button>
             </div>
             
             <div id="activeReservationsContainer">
@@ -1591,7 +1545,7 @@ Es Teh Manis,8000</pre>
             </div>
         </div>
         
-        <!-- Tab Laporan Harian -->
+        <!-- Tab Laporan Harian (dengan urutan berdasarkan DP) -->
         <div id="daily-report" class="tab-content">
             <h2 style="margin-bottom: 20px; color: #2c3e50;">Laporan Harian (Reservasi dengan DP)</h2>
             <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 0.9rem;">Hanya menampilkan reservasi yang sudah membayar DP</p>
@@ -1899,7 +1853,7 @@ Es Teh Manis,8000</pre>
             </div>
         </div>
         
-        <!-- Modal untuk Tambah/Edit DP (dengan tombol hapus yang tersembunyi) -->
+        <!-- Modal untuk Tambah/Edit DP (dengan inputmode numeric) -->
         <div id="addDpModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -1908,7 +1862,7 @@ Es Teh Manis,8000</pre>
                 </div>
                 <div class="form-group">
                     <label for="dpAmount">Nominal DP (Rp):</label>
-                    <input type="text" id="dpAmount" class="form-control" placeholder="Contoh: 50000" onkeyup="formatRupiah(this)">
+                    <input type="text" id="dpAmount" class="form-control" placeholder="Contoh: 50000" inputmode="numeric" pattern="[0-9]*" onkeyup="formatRupiah(this)">
                 </div>
                 <div class="form-group">
                     <label for="dpMethod">Metode Pembayaran:</label>
@@ -1930,7 +1884,7 @@ Es Teh Manis,8000</pre>
             </div>
         </div>
         
-        <!-- Modal untuk Detail Menu per Meja -->
+        <!-- Modal untuk Detail Menu per Meja (dapat ditutup dengan klik luar) -->
         <div id="menuDetailModal" class="modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -1972,6 +1926,15 @@ Es Teh Manis,8000</pre>
         const db = firebase.firestore();
         const auth = firebase.auth();
         
+        // Helper untuk mendapatkan tanggal lokal hari ini
+        function getTodayLocal() {
+            const d = new Date();
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+        
         // ============ AUTH STATE ============
         auth.onAuthStateChanged((user) => {
             if (user) {
@@ -1981,7 +1944,7 @@ Es Teh Manis,8000</pre>
                 document.getElementById('userInfo').style.display = 'flex';
                 document.getElementById('userEmail').textContent = user.email;
                 
-                const today = new Date().toISOString().split('T')[0];
+                const today = getTodayLocal();
                 document.getElementById('reportDate').value = today;
                 document.getElementById('checkDate').value = today;
                 document.getElementById('filterReservationDate').value = today;
@@ -2395,6 +2358,7 @@ Es Teh Manis,8000</pre>
             });
             document.getElementById('saveCategoryMenuBtn').addEventListener('click', saveCategoryMenus);
             
+            // Event listener untuk modal agar bisa ditutup dengan klik di luar
             document.getElementById('invoiceModal').addEventListener('click', function(e) {
                 if (e.target === this) this.style.display = 'none';
             });
@@ -2411,6 +2375,12 @@ Es Teh Manis,8000</pre>
                 if (e.target === this) this.style.display = 'none';
             });
             document.getElementById('categoryMenuModal').addEventListener('click', function(e) {
+                if (e.target === this) this.style.display = 'none';
+            });
+            document.getElementById('menuDetailModal').addEventListener('click', function(e) {
+                if (e.target === this) this.style.display = 'none';
+            });
+            document.getElementById('reservationDetailModal').addEventListener('click', function(e) {
                 if (e.target === this) this.style.display = 'none';
             });
             
@@ -2444,6 +2414,21 @@ Es Teh Manis,8000</pre>
                 }
             });
             
+            // Clear search button
+            const searchActive = document.getElementById('searchActiveReservations');
+            const clearBtn = document.getElementById('clearSearchActive');
+            if (searchActive && clearBtn) {
+                searchActive.addEventListener('input', function() {
+                    clearBtn.style.display = this.value ? 'block' : 'none';
+                    loadReservations();
+                });
+                clearBtn.addEventListener('click', function() {
+                    searchActive.value = '';
+                    clearBtn.style.display = 'none';
+                    loadReservations();
+                });
+            }
+            
             // Table management
             document.getElementById('addTableBtn').addEventListener('click', () => {
                 document.getElementById('addTableModal').style.display = 'flex';
@@ -2476,7 +2461,7 @@ Es Teh Manis,8000</pre>
             });
             document.getElementById('confirmSelectTableBtn').addEventListener('click', confirmSelectTables);
             
-            // MODIFIED: Tombol hapus meja terpilih
+            // Tombol hapus meja terpilih
             document.getElementById('clearSelectedTablesBtn').addEventListener('click', function() {
                 if (currentOrder.tables && currentOrder.tables.length > 0) {
                     if (confirm('Hapus semua meja terpilih?')) {
@@ -3067,7 +3052,7 @@ Es Teh Manis,8000</pre>
         }
         
         function updateReservationCounts() {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getTodayLocal();
             
             const activeReservations = reservations.filter(r => r.reservationDate >= today);
             const pastReservations = reservations.filter(r => r.reservationDate < today);
@@ -3754,9 +3739,9 @@ Es Teh Manis,8000</pre>
             }
         }
         
-        // ============ MODIFIED loadReservations dengan filter tanggal dan statistik ============
+        // ============ MODIFIED loadReservations dengan filter tanggal (tanpa statistik) ============
         function loadReservations(filterDate = null) {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getTodayLocal();
             const activeContainer = document.getElementById('activeReservationsContainer');
             const pastContainer = document.getElementById('pastReservationsContainer');
             
@@ -3861,28 +3846,6 @@ Es Teh Manis,8000</pre>
             }
             
             updateReservationCounts();
-            updateStats(filterDate);
-        }
-        
-        // MODIFIED: perbaiki fungsi updateStats
-        function updateStats(filterDate) {
-            const withDpEl = document.getElementById('statsWithDp');
-            const withoutDpEl = document.getElementById('statsWithoutDp');
-            if (!withDpEl || !withoutDpEl) return;
-            
-            let targetReservations = [];
-            if (filterDate) {
-                targetReservations = reservations.filter(r => r.reservationDate === filterDate);
-            } else {
-                const today = new Date().toISOString().split('T')[0];
-                targetReservations = reservations.filter(r => r.reservationDate >= today);
-            }
-            
-            const countWithDp = targetReservations.filter(r => r.dpAmount != null && r.dpAmount > 0).length;
-            const countWithoutDp = targetReservations.filter(r => r.dpAmount == null || r.dpAmount === 0).length;
-            
-            withDpEl.textContent = countWithDp;
-            withoutDpEl.textContent = countWithoutDp;
         }
         
         // ============ FUNGSI DP ============
@@ -4567,7 +4530,7 @@ Es Teh Manis,8000</pre>
                 });
         }
         
-        // ============ LAPORAN HARIAN (hanya reservasi dengan DP) ============
+        // ============ LAPORAN HARIAN (dengan urutan berdasarkan DP) ============
         function generateDailyReport() {
             const reportDate = document.getElementById('reportDate').value;
             const sortBy = document.getElementById('reportSort').value;
@@ -4593,7 +4556,7 @@ Es Teh Manis,8000</pre>
             menuItems.forEach(menu => { menuMap[menu.name] = menu; });
             
             const menuTotals = {};
-            const categoryTotals = {};
+            const categoryTotals = {}; // { id: { name, total, items: { menuName: { total, dpOrders } } } }
             
             reservationsWithDp.forEach(res => {
                 res.items.forEach(item => {
@@ -4608,9 +4571,12 @@ Es Teh Manis,8000</pre>
                                 categoryTotals[cat.id] = { name: cat.name, total: 0, items: {} };
                             }
                             if (!categoryTotals[cat.id].items[menuName]) {
-                                categoryTotals[cat.id].items[menuName] = 0;
+                                categoryTotals[cat.id].items[menuName] = { total: 0, dpOrders: [] };
                             }
-                            categoryTotals[cat.id].items[menuName] += item.quantity;
+                            categoryTotals[cat.id].items[menuName].total += item.quantity;
+                            if (res.dpOrder) {
+                                categoryTotals[cat.id].items[menuName].dpOrders.push(res.dpOrder);
+                            }
                             categoryTotals[cat.id].total += item.quantity;
                         });
                     }
@@ -4631,17 +4597,27 @@ Es Teh Manis,8000</pre>
             if (Object.keys(categoryTotals).length > 0) {
                 html += `<h4 style="margin-top: 20px;">Per Kategori</h4>`;
                 Object.values(categoryTotals).sort((a,b) => a.name.localeCompare(b.name)).forEach(cat => {
+                    // Urutkan item berdasarkan dpOrder terkecil
+                    const sortedItems = Object.entries(cat.items).sort((a, b) => {
+                        const minA = a[1].dpOrders.length ? Math.min(...a[1].dpOrders) : Infinity;
+                        const minB = b[1].dpOrders.length ? Math.min(...b[1].dpOrders) : Infinity;
+                        if (minA === Infinity && minB === Infinity) return a[0].localeCompare(b[0]);
+                        if (minA === Infinity) return 1;
+                        if (minB === Infinity) return -1;
+                        return minA - minB;
+                    });
+                    
                     html += `
                         <div class="category-card">
                             <div class="category-title">${cat.name}</div>
                             <div class="category-total">Total: ${cat.total} porsi</div>
                             <div class="category-items">
                     `;
-                    Object.keys(cat.items).sort().forEach(menu => {
+                    sortedItems.forEach(([menuName, data]) => {
                         html += `
                             <div class="category-item-detail">
-                                <span class="category-item-name" style="cursor:pointer;" onclick="showMenuDetail('${menu}', '${reportDate}')">${menu}</span>
-                                <span class="category-item-qty">${cat.items[menu]}</span>
+                                <span class="category-item-name" style="cursor:pointer;" onclick="showMenuDetail('${menuName}', '${reportDate}')">${menuName}</span>
+                                <span class="category-item-qty">${data.total}</span>
                             </div>
                         `;
                     });
@@ -4666,7 +4642,7 @@ Es Teh Manis,8000</pre>
             document.getElementById('reportResult').innerHTML = html;
         }
         
-        // ============ DETAIL MENU PER MEJA (dengan urutan DP) ============
+        // ============ DETAIL MENU PER MEJA (dengan urutan berdasarkan DP) - MODIFIED ============
         window.showMenuDetail = function(menuName, reportDate) {
             const reservationsWithDp = reservations.filter(r => r.reservationDate === reportDate && r.dpAmount != null);
             const items = [];
@@ -4700,14 +4676,30 @@ Es Teh Manis,8000</pre>
                 });
             });
             
+            // Urutkan details dalam setiap group berdasarkan dpOrder
+            for (let tables in groups) {
+                groups[tables].details.sort((a, b) => (a.dpOrder === '-' ? Infinity : a.dpOrder) - (b.dpOrder === '-' ? Infinity : b.dpOrder));
+            }
+            
+            // Urutkan groups berdasarkan dpOrder terkecil
+            const sortedGroups = Object.entries(groups).sort((a, b) => {
+                const minA = a[1].details.length ? Math.min(...a[1].details.map(d => d.dpOrder === '-' ? Infinity : d.dpOrder)) : Infinity;
+                const minB = b[1].details.length ? Math.min(...b[1].details.map(d => d.dpOrder === '-' ? Infinity : d.dpOrder)) : Infinity;
+                if (minA === Infinity && minB === Infinity) return a[0].localeCompare(b[0]);
+                if (minA === Infinity) return 1;
+                if (minB === Infinity) return -1;
+                return minA - minB;
+            });
+            
             let detailHtml = `<p><strong>Total porsi:</strong> ${totalQty}</p>`;
             if (items.length === 0) {
                 detailHtml += '<p>Tidak ada data.</p>';
             } else {
-                for (let [tables, group] of Object.entries(groups)) {
+                for (let [tables, group] of sortedGroups) {
                     detailHtml += `<div style="margin-top:10px;"><strong>Meja ${tables} : ${group.total} porsi</strong>`;
                     group.details.forEach(d => {
-                        detailHtml += `<div style="margin-left:20px;">${d.customer} - DP ke-${d.dpOrder} : ${d.quantity} porsi</div>`;
+                        // MODIFIED: Hapus jumlah porsi di baris detail
+                        detailHtml += `<div style="margin-left:20px;">${d.customer} - DP ke-${d.dpOrder}</div>`;
                     });
                     detailHtml += `</div>`;
                 }
