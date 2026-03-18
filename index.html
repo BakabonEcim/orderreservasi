@@ -3643,6 +3643,7 @@ Es Teh Manis,8000</pre>
             return invoiceText;
         }
         
+        // ============ MODIFIED generateListPesanan dengan format baru ============
         function generateListPesanan(reservation) {
             const date = new Date(reservation.reservationDate);
             const formattedDate = date.toLocaleDateString('id-ID', {
@@ -3652,22 +3653,42 @@ Es Teh Manis,8000</pre>
             });
             
             let listText = "PESANAN RESERVASI\n\n";
-            listText += `Nama : ${reservation.customerName}\n`;
-            listText += `Tanggal Reservasi : ${formattedDate}\n\n`;
             
-            reservation.items.forEach((item) => {
+            // Meja
+            if (reservation.tables && reservation.tables.length > 0) {
+                listText += `Meja : ${reservation.tables.join(', ')}\n`;
+            }
+            
+            listText += `Nama : ${reservation.customerName}\n`;
+            listText += `Tanggal Rsv : ${formattedDate}\n\n`;
+            
+            // Items dengan spasi antar item
+            reservation.items.forEach((item, index) => {
                 const qty = item.quantity.toString().padStart(2);
                 let nameWithNotes = item.name;
                 if (item.notes) {
                     nameWithNotes += ` (${item.notes})`;
                 }
-                
                 listText += `${qty}   ${nameWithNotes}\n`;
+                if (index < reservation.items.length - 1) {
+                    listText += "\n"; // tambah baris kosong antar item
+                }
             });
             
             listText += `\nTOTAL: Rp${reservation.total.toLocaleString('id-ID')}\n\n`;
-            listText += `Pembayaran DP : \n\n`;
-            listText += `Urutan : `;
+            
+            // DP
+            if (reservation.dpAmount) {
+                listText += `Pembayaran DP : Rp${reservation.dpAmount.toLocaleString('id-ID')} (${reservation.dpMethod})\n`;
+            } else {
+                listText += `Pembayaran DP : \n`;
+            }
+            
+            if (reservation.dpOrder) {
+                listText += `Urutan : ${reservation.dpOrder}\n`;
+            } else {
+                listText += `Urutan : \n`;
+            }
             
             return listText;
         }
@@ -4642,7 +4663,7 @@ Es Teh Manis,8000</pre>
             document.getElementById('reportResult').innerHTML = html;
         }
         
-        // ============ DETAIL MENU PER MEJA (dengan urutan berdasarkan DP) - MODIFIED ============
+        // ============ DETAIL MENU PER MEJA (dengan urutan berdasarkan DP dan notes) ============
         window.showMenuDetail = function(menuName, reportDate) {
             const reservationsWithDp = reservations.filter(r => r.reservationDate === reportDate && r.dpAmount != null);
             const items = [];
@@ -4653,7 +4674,8 @@ Es Teh Manis,8000</pre>
                             customer: res.customerName,
                             tables: res.tables || [],
                             quantity: item.quantity,
-                            dpOrder: res.dpOrder || '-'
+                            dpOrder: res.dpOrder || '-',
+                            notes: item.notes || '' // tambahkan notes
                         });
                     }
                 });
@@ -4672,7 +4694,8 @@ Es Teh Manis,8000</pre>
                 groups[tableKey].details.push({
                     customer: item.customer,
                     dpOrder: item.dpOrder,
-                    quantity: item.quantity
+                    quantity: item.quantity,
+                    notes: item.notes
                 });
             });
             
@@ -4698,8 +4721,10 @@ Es Teh Manis,8000</pre>
                 for (let [tables, group] of sortedGroups) {
                     detailHtml += `<div style="margin-top:10px;"><strong>Meja ${tables} : ${group.total} porsi</strong>`;
                     group.details.forEach(d => {
-                        // MODIFIED: Hapus jumlah porsi di baris detail
                         detailHtml += `<div style="margin-left:20px;">${d.customer} - DP ke-${d.dpOrder}</div>`;
+                        if (d.notes) {
+                            detailHtml += `<div style="margin-left:40px; font-style: italic; color: #666;">Catatan: ${d.notes}</div>`;
+                        }
                     });
                     detailHtml += `</div>`;
                 }
@@ -5059,4 +5084,4 @@ Es Teh Manis,8000</pre>
         }
     </script>
 </body>
-</html>
+    </html>
